@@ -1,6 +1,6 @@
 ﻿using GTA;
 
-namespace AirSuperiority.EntityManagement
+namespace AirSuperiority.Script.EntityManagement
 {
     public class ManageablePed : ManagedEntity
     {

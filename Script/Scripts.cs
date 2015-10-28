@@ -28,6 +28,14 @@ namespace AirSuperiority
             GTA.Script.Wait(wait);
         }
 
+        public static void DisableHospitalRestart(bool toggle)
+        {
+            for (int i = 0; i <= 4; i++)
+            {
+                Function.Call(Hash.DISABLE_HOSPITAL_RESTART, i, toggle);
+            }
+        }
+
 
         /// <summary>
         /// Get random position near an entity.

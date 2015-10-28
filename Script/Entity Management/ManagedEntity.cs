@@ -1,17 +1,30 @@
 ﻿using System;
 using GTA;
 
-namespace AirSuperiority.EntityManagement
+namespace AirSuperiority.Script.EntityManagement
 {
     public delegate void EntityChangedEventHandler(object sender, EntityChangedEventArgs e);
 
     public abstract class ManagedEntity : Entity
     {
         private TimeSpan totalTime;
-        private int deadTicks, aliveTicks, totalTicks;
+        private int deadTicks, aliveTicks, waterTicks, totalTicks;
         private int spawnTime;
 
-        protected event EntityChangedEventHandler Alive, Dead;
+        /// <summary>
+        /// Fired when the entity has been revived.
+        /// </summary>
+        public event EntityChangedEventHandler Alive;
+
+        /// <summary>
+        /// Fired when the entity has died.
+        /// </summary>
+        public event EntityChangedEventHandler Dead;
+
+        /// <summary>
+        /// Fired when the entity has entered water.
+        /// </summary>
+        public event EntityChangedEventHandler EnterWater;
 
         /// <summary>
         /// Total entity ticks.
@@ -42,6 +55,14 @@ namespace AirSuperiority.EntityManagement
         }
 
         /// <summary>
+        /// Total ticks for which the entity has been in water.
+        /// </summary>
+        public int WaterTicks
+        {
+            get { return waterTicks; }
+        }
+
+        /// <summary>
         /// Initialize the entity for management.
         /// </summary>
         /// <param name="entity"></param>
@@ -60,12 +81,14 @@ namespace AirSuperiority.EntityManagement
             Dead?.Invoke(this, e);
         }
 
-        /// <summary>
-        /// Fired when the entity has been revived.
-        /// </summary>
         protected virtual void OnAlive(EntityChangedEventArgs e)
         {
             Alive?.Invoke(this, e);
+        }
+
+        protected virtual void OnWaterEnter(EntityChangedEventArgs e)
+        {
+            EnterWater?.Invoke(this, e);
         }
 
         /// <summary>
@@ -83,21 +106,24 @@ namespace AirSuperiority.EntityManagement
             if (IsDead)
             {
                 if (deadTicks == 0)
-                {
-                    OnDead(new EntityChangedEventArgs(this));
-                }
-
-                
+                    OnDead(new EntityChangedEventArgs(this));            
                 aliveTicks = 0;
                 deadTicks++;
             }
 
             else
             {
-                if (aliveTicks == 0)
+                if (IsInWater)
                 {
-                    OnAlive(new EntityChangedEventArgs(this));
+                    if (waterTicks == 0)
+                        OnWaterEnter(new EntityChangedEventArgs(this));
+                    waterTicks++;
                 }
+                else
+                    waterTicks = 0;
+
+                if (aliveTicks == 0)
+                    OnAlive(new EntityChangedEventArgs(this));
 
                 deadTicks = 0;
                 aliveTicks++;

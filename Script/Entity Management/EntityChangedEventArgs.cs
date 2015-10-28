@@ -1,7 +1,7 @@
 ﻿using System;
 using GTA;
 
-namespace AirSuperiority.EntityManagement
+namespace AirSuperiority.Script.EntityManagement
 {
     /// <summary>
     /// Event args for entity related events

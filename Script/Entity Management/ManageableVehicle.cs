@@ -1,7 +1,7 @@
 ﻿using GTA;
 using GTA.Native;
 
-namespace AirSuperiority.EntityManagement
+namespace AirSuperiority.Script.EntityManagement
 {
     public class ManageableVehicle : ManagedEntity
     {
@@ -9,10 +9,6 @@ namespace AirSuperiority.EntityManagement
 
         public Vehicle Vehicle {
             get { return vehicle; }
-        }
-
-        public int VehicleMissionType {
-            get { return Function.Call<int>((Hash)0x534AEBA6E5ED4CAB, vehicle.Handle); }
         }
 
         public ManageableVehicle(Vehicle Vehicle) : base(Vehicle)
@@ -23,6 +19,5 @@ namespace AirSuperiority.EntityManagement
         protected override void OnUpdate()
         {
         }
-
     }
 }

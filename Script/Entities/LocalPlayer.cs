@@ -2,54 +2,98 @@
 using GTA.Math;
 using GTA.Native;
 using System;
-using AirSuperiority.EntityManagement;
+using System.Linq;
+using AirSuperiority.Types;
+using AirSuperiority.Script.EntityManagement;
 
 namespace AirSuperiority.Script.Entities
 {
     public sealed class LocalPlayer : ActiveFighter
     {
+        private InterpolatingCamera interpCam;
+        private Timer boostTimer = new Timer(5000);
+
         /// <summary>
         /// Setup fighter for the local player.
         /// </summary>
         public void Setup()
         {
+            AssignTeam(TeamManager.ActiveTeams.GetRandomItem());
+
             var vehModel = new Model(VehicleHash.Lazer);
-            var vehPos = GetRandomSpawnPos();
+            var spawnPos = Team.SpawnInfo.Item1;
 
             if (!vehModel.IsLoaded)
                 vehModel.Request(1000);
 
             //Create the vehicle and assign it to a ManageableVehicle.
-            var vehicle = new ManageableVehicle(World.CreateVehicle(vehModel, vehPos.Item1));
-            vehicle.Heading = vehPos.Item2;
+            var vehicle = new ManageableVehicle(World.CreateVehicle(vehModel, Team.SpawnInfo.Item1));
+            vehicle.Heading = Team.SpawnInfo.Item2;
             vehicle.Vehicle.EngineRunning = true;
-            vehicle.ApplyForce(vehicle.ForwardVector * 2);
+            vehicle.IsInvincible = true;          
+            ManagedVehicle = vehicle;
 
             var ped = new ManageablePed(Game.Player.Character);
-            ped.Position = vehPos.Item1;
+            ped.Position = Team.SpawnInfo.Item1;
             ped.Ped.SetIntoVehicle(vehicle.Vehicle, VehicleSeat.Driver);
-
-            ManagedVehicle = vehicle;
             ManagedPed = ped;
+            ManagedPed.EnterWater += ManagedPed_EnterWater;
+            ManagedPed.Alive += ManagedPed_Alive;
+
+            interpCam = new InterpolatingCamera(vehicle.GetOffsetInWorldCoords(new Vector3(-2f, -2f, 10f)));
+            interpCam.MainCamera.PointAt(vehicle);
+            interpCam.Start();
+
+            boostTimer.Start();
         }
 
-        /// <summary>
-        /// Get random item from known spawn locations.
-        /// </summary>
-        /// <returns></returns>
-        private Tuple<Vector3, float> GetRandomSpawnPos()
+        private void ManagedPed_Alive(object sender, EntityChangedEventArgs e)
         {
-            return new Tuple<Vector3, float>[] {
-                new Tuple<Vector3, float>(new Vector3(-3232.42f, -1755.673f, 226.5322f), 292.7778f),
-                new Tuple<Vector3, float>(new Vector3(2287.492f, 7661.41f, 579.9888f), 162.8432f),
-                new Tuple<Vector3, float>(new Vector3(3220.731f, 7935.237f, 421.6384f), 160.8841f)
-            }.GetRandomItem();
+       //     Setup();
+            UI.ShowSubtitle("setup");
+        }
+
+        private void ManagedPed_EnterWater(object sender, EntityChangedEventArgs e)
+        {
+            Scripts.FadeOutScreen(1500, 2000);
+            Setup();
+            Scripts.FadeInScreen(500, 1000);
+        }
+
+        public override void Update()
+        {
+            if (interpCam != null && !Function.Call<bool>(Hash.IS_CAM_RENDERING, interpCam.MainCamera.Handle))
+            {               
+                LandingGearState = LandingGearState.Closing;
+                UI.ShowSubtitle("destroyed");
+                interpCam.Destroy();
+                interpCam = null;
+            }
+
+            if (boostTimer.Enabled)
+            {
+                if (Game.GameTime > boostTimer.Waiter)
+                {
+                    ManagedVehicle.IsInvincible = false;
+                    boostTimer.Enabled = false;
+                }
+
+                else if (new Control[] { Control.MoveUpDown, Control.MoveLeftRight }.Any(x => Game.IsControlPressed(0, x)))
+                    boostTimer.Enabled = false;
+
+                else
+                    ManagedVehicle.ApplyForce(ManagedVehicle.ForwardVector * 2);
+            }
+        
+            base.Update();
         }
 
         /// <summary>
         /// Unload player related things.
         /// </summary>
         public void Unload()
-        { }
+        {
+            ManagedVehicle?.Delete();
+        }
     }
 }

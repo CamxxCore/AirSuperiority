@@ -54,9 +54,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Entity Management\EntityChangedEventArgs.cs" />
-    <Compile Include="Entity Management\ManagedEntity.cs" />
-    <Compile Include="Entity Management\ManageablePed.cs" />
+    <Compile Include="Resources.cs" />
+    <Compile Include="Script\TeamManager.cs" />
+    <Compile Include="Types\LandingGearState.cs" />
+    <Compile Include="Types\Team.cs" />
+    <Compile Include="Script\Entities\AIPlayer.cs" />
+    <Compile Include="Script\Entity Management\EntityChangedEventArgs.cs" />
+    <Compile Include="Script\Entity Management\ManagedEntity.cs" />
+    <Compile Include="Script\Entity Management\ManageablePed.cs" />
     <Compile Include="NativeUI\InstructionalButton.cs" />
     <Compile Include="NativeUI\MenuPool.cs" />
     <Compile Include="NativeUI\Sprite.cs" />
@@ -67,19 +72,20 @@
     <Compile Include="NativeUI\UIMenuListItem.cs" />
     <Compile Include="NativeUI\UIResRectangle.cs" />
     <Compile Include="NativeUI\UIResText.cs" />
+    <Compile Include="Script\InterpCam.cs" />
     <Compile Include="Script\Scripts.cs" />
     <Compile Include="Script\Timer.cs" />
     <Compile Include="Script\GameManager.cs" />
     <Compile Include="Script\Entities\ActiveFighter.cs" />
     <Compile Include="Script\Entities\LocalPlayer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Entity Management\ManageableVehicle.cs" />
+    <Compile Include="Script\Entity Management\ManageableVehicle.cs" />
     <Compile Include="Script\Menus\GameMenu.cs" />
+    <Compile Include="Script\UIText.cs" />
+    <Compile Include="Types\TeamInfo.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Enums\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy "$(TargetPath)" "C:\Program Files\Rockstar Games\Grand Theft Auto V\scripts\$(ProjectName).dll"</PostBuildEvent>
