@@ -19,7 +19,6 @@ namespace AirSuperiority.Script.Entities
             var vehModel = new Model(VehicleHash.Lazer);
 
             var spawnPos = GetValidSpawnPos();
-            var spawnHeading = Team.TeamInfo.SpawnInfo.Item2;
 
             if (!pedModel.IsLoaded)
                 pedModel.Request(1000);
@@ -28,25 +27,23 @@ namespace AirSuperiority.Script.Entities
                 vehModel.Request(1000);
 
             var vehicle = new ManageableVehicle(World.CreateVehicle(vehModel, spawnPos));
-            vehicle.LodDistance = 1000;
-            vehicle.Heading = spawnHeading;
+            vehicle.Heading = Team.SpawnInfo.Item2;
             vehicle.Vehicle.EngineRunning = true;
             vehicle.AddBlip();
             vehicle.CurrentBlip.Sprite = BlipSprite.Plane;
 
-            vehicle.CurrentBlip.Color = Team.Index == 0 ?
-                BlipColor.Red : Team.Index == 1 ?
-                BlipColor.Green : Team.Index == 3 ?
+            vehicle.CurrentBlip.Color = Team.Index == 0 ? 
+                BlipColor.Red : Team.Index == 1 ? 
+                BlipColor.Green : Team.Index == 3 ? 
                 BlipColor.Blue : BlipColor.Yellow;
 
-
-
             ManagedVehicle = vehicle;
-            LandingGearState = LandingGearState.Closing;
+
             var ped = new ManageablePed(World.CreatePed(pedModel, spawnPos));
-            ped.Ped.RelationshipGroup = Team.RelationshipGroup;
             ped.Ped.BlockPermanentEvents = true;
             ped.Ped.SetIntoVehicle(vehicle.Vehicle, VehicleSeat.Driver);
+            ped.Ped.Task.FightAgainstHatedTargets(-1);
+
             ManagedPed = ped;
         }
 
@@ -58,13 +55,15 @@ namespace AirSuperiority.Script.Entities
         {
             for (int i = 0; i < 20; i++)
             {
-
-                var pos = Team.TeamInfo.SpawnInfo.Item1.Around(20 * i);
-
-                if (!Function.Call<bool>(Hash.IS_POINT_OBSCURED_BY_A_MISSION_ENTITY, pos.X, pos.Y, pos.Z, 5f, 5f, 5f, 0) &&
-                    !World.GetAllVehicles().Where(y => y.Model == VehicleHash.Lazer).Any(v => v.Position.DistanceTo(pos) < 20f))
+                for (int x = 0; x < 15; x++)
                 {
-                    return pos;
+                    var pos = Team.SpawnInfo.Item1.Around(30 * i);
+
+                    if (!Function.Call<bool>(Hash.IS_POINT_OBSCURED_BY_A_MISSION_ENTITY, pos.X, pos.Y, pos.Z, 5f, 5f, 5f, 0) &&
+                        !World.GetAllVehicles().Where(y => y.Model == VehicleHash.Lazer).Any(v => v.Position.DistanceTo(pos) < 30f))
+                    {
+                        return pos;
+                    }
                 }
             }
 
@@ -73,17 +72,9 @@ namespace AirSuperiority.Script.Entities
 
         public override void Update()
         {
-            // Function.Call(Hash.SET_BLIP_ROTATION, ManagedVehicle.CurrentBlip?.Handle, (float) Math.Round(ManagedVehicle.Heading));
-
-            if (LandingGearState != LandingGearState.Retracted)
+            if (LandingGearState != (LandingGearState.Closing | LandingGearState.Retracted))
             {
                 LandingGearState = LandingGearState.Closing;
-            }
-
-            //fighter isn't in combat, find a new opponent.
-            if (VehicleMissionType == 0)
-            {
-                ManagedPed.Ped.Task.FightAgainstHatedTargets(100000f);
             }
 
             base.Update();

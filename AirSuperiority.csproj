@@ -57,6 +57,7 @@
     <Compile Include="Resources.cs" />
     <Compile Include="Script\TeamManager.cs" />
     <Compile Include="Types\LandingGearState.cs" />
+    <Compile Include="Types\Team.cs" />
     <Compile Include="Script\Entities\AIPlayer.cs" />
     <Compile Include="Script\Entity Management\EntityChangedEventArgs.cs" />
     <Compile Include="Script\Entity Management\ManagedEntity.cs" />
@@ -71,7 +72,7 @@
     <Compile Include="NativeUI\UIMenuListItem.cs" />
     <Compile Include="NativeUI\UIResRectangle.cs" />
     <Compile Include="NativeUI\UIResText.cs" />
-    <Compile Include="Script\InterpolatingCamera.cs" />
+    <Compile Include="Script\InterpCam.cs" />
     <Compile Include="Script\Scripts.cs" />
     <Compile Include="Script\Timer.cs" />
     <Compile Include="Script\GameManager.cs" />
@@ -80,8 +81,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Script\Entity Management\ManageableVehicle.cs" />
     <Compile Include="Script\Menus\GameMenu.cs" />
-    <Compile Include="Script\UIManager.cs" />
-    <Compile Include="Types\TeamData.cs" />
+    <Compile Include="Script\UIText.cs" />
     <Compile Include="Types\TeamInfo.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
