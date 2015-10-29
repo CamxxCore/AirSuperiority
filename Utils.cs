@@ -15,7 +15,7 @@ namespace AirSuperiority
         public static T GetRandomItem<T>(this IEnumerable<T> items)
         {
             if (items.Count() < 1) return default(T);
-            var random = new Random();
+            var random = new Random(Guid.NewGuid().GetHashCode());
             return (T)(object)items.ToArray()[random.Next(0, items.Count())];
         }
 

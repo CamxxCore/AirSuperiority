@@ -1,0 +1,5 @@
+C:\Users\Cameron\Documents\Visual Studio 2015\Projects\AirSuperiority\AirSuperiority\bin\x64\Debug\AirSuperiority.dll
+C:\Users\Cameron\Documents\Visual Studio 2015\Projects\AirSuperiority\AirSuperiority\bin\x64\Debug\AirSuperiority.pdb
+C:\Users\Cameron\Documents\Visual Studio 2015\Projects\AirSuperiority\AirSuperiority\bin\x64\Debug\ScriptHookVDotNet.dll
+C:\Users\Cameron\Documents\Visual Studio 2015\Projects\AirSuperiority\AirSuperiority\obj\x64\Debug\AirSuperiority.dll
+C:\Users\Cameron\Documents\Visual Studio 2015\Projects\AirSuperiority\AirSuperiority\obj\x64\Debug\AirSuperiority.pdb
