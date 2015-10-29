@@ -13,7 +13,7 @@ namespace AirSuperiority.Script
         /// <summary>
         /// Contains information about active teams.
         /// </summary>
-        public static TeamInfo[] ActiveTeams = new TeamInfo[4];
+        private static TeamData[] _activeTeams = new TeamData[4];
 
         /// <summary>
         /// World relationship groups.
@@ -25,16 +25,23 @@ namespace AirSuperiority.Script
             World.AddRelationshipGroup("team4")
         };
 
-        public static void SetupRelationshipGroups()
+        /// <summary>
+        /// Get the team by its index.
+        /// </summary>
+        /// <param name="team"></param>
+        /// <returns></returns>
+        public static TeamData GetTeamByIndex(int team)
         {
-            for (int i = 0; i < rGroups.Count; i++)
-            {
-                for (int a = 0; a < rGroups.Count; i++)
-                {
-                    if (a == i) continue;
-                    World.SetRelationshipBetweenGroups(Relationship.Hate, rGroups[i], rGroups[a]);
-                }
-            }
+            return _activeTeams[team];
+        }
+
+        /// <summary>
+        /// Get all active teams.
+        /// </summary>
+        /// <returns></returns>
+        public static TeamData[] GetActiveTeams()
+        {
+            return _activeTeams;
         }
 
         /// <summary>
@@ -42,13 +49,16 @@ namespace AirSuperiority.Script
         /// </summary>
         public static void GetNewTeams()
         { 
-            for (int i = 0; i < ActiveTeams.Count(); i++)
+            for (int i = 0; i < 4; i++)
             {
-                ActiveTeams[i] = default(TeamInfo);
-                ActiveTeams[i] = Resources.ValidTeams.Where(x => !ActiveTeams.Contains(x)).GetRandomItem();
-                ActiveTeams[i].Index = i;
-                ActiveTeams[i].RelationshipGroup = rGroups[i];
-                UI.Notify(ActiveTeams[i].FriendlyName);
+                _activeTeams[i] = default(TeamData);
+                _activeTeams[i].TeamInfo = Resources.ValidTeams.Where(x => !_activeTeams.Any(y => y.TeamInfo.FriendlyName == x.FriendlyName)).GetRandomItem();
+                _activeTeams[i].Index = i;
+                _activeTeams[i].RelationshipGroup = rGroups[i];
+                _activeTeams[i].Score = 0;
+                _activeTeams[i].Members = new List<ActiveFighter>();
+                UIManager.UpdateTeamInfoFriendlyName(i, _activeTeams[i].TeamInfo.FriendlyName);
+                UIManager.UpdateTeamInfoFlagAsset(i, _activeTeams[i].TeamInfo.ImageAsset);
             }
         }
 
@@ -57,27 +67,48 @@ namespace AirSuperiority.Script
         /// </summary>
         /// <param name="newFighter">Target fighter.</param>
         /// <param name="activeFighters">Active fighters.</param>
-        public static void SetupFighterTeam(ActiveFighter newFighter, IEnumerable<ActiveFighter> activeFighters)
+        public static void SetupFighterTeam(ActiveFighter newFighter)
         {
-            var memberCounts = new List<int> { GetActiveTeamMemberCount(ActiveTeams[0], activeFighters),
-                GetActiveTeamMemberCount(ActiveTeams[1], activeFighters),
-                GetActiveTeamMemberCount(ActiveTeams[2], activeFighters),
-                GetActiveTeamMemberCount(ActiveTeams[3], activeFighters) };
+            var memberCounts = new List<int> { _activeTeams[0].Members.Count,
+                _activeTeams[1].Members.Count,
+                _activeTeams[2].Members.Count,
+                _activeTeams[3].Members.Count};
 
-            newFighter.AssignTeam(ActiveTeams[memberCounts.IndexOf(memberCounts.Min())]);
+            var team = _activeTeams[memberCounts.IndexOf(memberCounts.Min())];
+            newFighter.AssignTeam(team);
+            team.Members.Add(newFighter);
         }
 
-        public static int GetActiveTeamMemberCount(TeamInfo team, IEnumerable<ActiveFighter> activeFighters)
+                /// <summary>
+        /// Register score for the fighters team.
+        /// </summary>
+        /// <param name="score"></param>
+        public static void RegisterScoreForTeam(int team, int score)
         {
-            var memberCount = 0;
+            _activeTeams[team].Score += score / 10;
+        }
 
-            foreach (var item in activeFighters)
+        /// <summary>
+        /// Update team related information.
+        /// </summary>
+        public static void Update()
+        {
+            for (int i = 0; i < 4; i++)
+                UIManager.UpdateTeamInfoProgressBar(i, _activeTeams[i].Score);
+        }
+
+        /// <summary>
+        /// Setup world relationship groups.
+        /// </summary>
+        public static void SetupRelationshipGroups()
+        {
+            foreach (int group in rGroups)
             {
-                if (item.Team.Equals(team))
-                    memberCount++;
+                foreach (int enemyGroup in rGroups.Where(x => x != group))
+                {
+                    World.SetRelationshipBetweenGroups(Relationship.Hate, group, enemyGroup);
+                }
             }
-
-            return memberCount;
         }
 
         /// <summary>

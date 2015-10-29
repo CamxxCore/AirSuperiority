@@ -9,7 +9,7 @@ namespace AirSuperiority.Script.Entities
     {
         private ManageablePed ped;
         private ManageableVehicle vehicle;
-        private TeamInfo team;
+        private TeamData team;
 
         /// <summary>
         /// Managed ped object associated to this fighter.
@@ -32,7 +32,7 @@ namespace AirSuperiority.Script.Entities
         /// <summary>
         /// Fighters team.
         /// </summary>
-        public TeamInfo Team
+        public TeamData Team
         {
             get { return team; }
         }
@@ -81,15 +81,22 @@ namespace AirSuperiority.Script.Entities
         /// <param name="fighter"></param>
         public void FightAgainst(ActiveFighter fighter)
         {
-         //   ManagedPed.
             ManagedPed.Ped.Task.FightAgainst(fighter.ManagedPed.Ped);
+        }
+
+        /// <summary>
+        /// Clear all ped tasks.
+        /// </summary>
+        public void ClearTasks()
+        {
+            ManagedPed.Ped.Task.ClearAllImmediately();
         }
 
         /// <summary>
         /// Assign this fighter a team.
         /// </summary>
         /// <param name="newTeam"></param>
-        public void AssignTeam(TeamInfo newTeam)
+        public void AssignTeam(TeamData newTeam)
         {
             team = newTeam;
         }
@@ -108,10 +115,21 @@ namespace AirSuperiority.Script.Entities
         /// </summary>
         public void Remove()
         {
-            ped.Delete();
             ped.CurrentBlip?.Remove();
             vehicle.CurrentBlip?.Remove();
+            ped.Delete();
             vehicle.Delete();
+        }
+
+        /// <summary>
+        /// Set the ped and vehicle as no longer needed. Let the engine cleanup.
+        /// </summary>
+        public void MarkAsNoLongerNeeded()
+        {
+            ped.CurrentBlip?.Remove();
+            vehicle.CurrentBlip?.Remove();
+            ped.MarkAsNoLongerNeeded();
+            vehicle.MarkAsNoLongerNeeded();
         }
     }
 }

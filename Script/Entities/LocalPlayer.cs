@@ -18,27 +18,30 @@ namespace AirSuperiority.Script.Entities
         /// </summary>
         public void Setup()
         {
-            AssignTeam(TeamManager.ActiveTeams.GetRandomItem());
+            AssignTeam(TeamManager.GetTeamByIndex(0));
 
             var vehModel = new Model(VehicleHash.Lazer);
-            var spawnPos = Team.SpawnInfo.Item1;
 
             if (!vehModel.IsLoaded)
                 vehModel.Request(1000);
 
+            var spawnPos = Team.TeamInfo.SpawnInfo.Item1;
+            var spawnHeading = Team.TeamInfo.SpawnInfo.Item2;
+
             //Create the vehicle and assign it to a ManageableVehicle.
-            var vehicle = new ManageableVehicle(World.CreateVehicle(vehModel, Team.SpawnInfo.Item1));
-            vehicle.Heading = Team.SpawnInfo.Item2;
+            var vehicle = new ManageableVehicle(World.CreateVehicle(vehModel, spawnPos));
+            vehicle.Heading = spawnHeading;
             vehicle.Vehicle.EngineRunning = true;
             vehicle.IsInvincible = true;          
             ManagedVehicle = vehicle;
 
+            ManagedVehicle.EnterWater += ManagedVehicle_EnterWater;
+
             var ped = new ManageablePed(Game.Player.Character);
-            ped.Position = Team.SpawnInfo.Item1;
+            ped.Ped.RelationshipGroup = Team.RelationshipGroup;
+           // ped.Position = spawnPos;
             ped.Ped.SetIntoVehicle(vehicle.Vehicle, VehicleSeat.Driver);
             ManagedPed = ped;
-            ManagedPed.EnterWater += ManagedPed_EnterWater;
-            ManagedPed.Alive += ManagedPed_Alive;
 
             interpCam = new InterpolatingCamera(vehicle.GetOffsetInWorldCoords(new Vector3(-2f, -2f, 10f)));
             interpCam.MainCamera.PointAt(vehicle);
@@ -47,13 +50,8 @@ namespace AirSuperiority.Script.Entities
             boostTimer.Start();
         }
 
-        private void ManagedPed_Alive(object sender, EntityChangedEventArgs e)
-        {
-       //     Setup();
-            UI.ShowSubtitle("setup");
-        }
 
-        private void ManagedPed_EnterWater(object sender, EntityChangedEventArgs e)
+        private void ManagedVehicle_EnterWater(object sender, EntityChangedEventArgs e)
         {
             Scripts.FadeOutScreen(1500, 2000);
             Setup();
@@ -62,29 +60,41 @@ namespace AirSuperiority.Script.Entities
 
         public override void Update()
         {
-            if (interpCam != null && !Function.Call<bool>(Hash.IS_CAM_RENDERING, interpCam.MainCamera.Handle))
-            {               
-                LandingGearState = LandingGearState.Closing;
-                UI.ShowSubtitle("destroyed");
-                interpCam.Destroy();
-                interpCam = null;
+            if (ManagedPed.IsDead)
+            {
+
+                GTA.Script.Wait(5000);
+                Setup();
             }
 
-            if (boostTimer.Enabled)
+            else
             {
-                if (Game.GameTime > boostTimer.Waiter)
+                if (interpCam != null && !Function.Call<bool>(Hash.IS_CAM_RENDERING, interpCam.MainCamera.Handle))
                 {
-                    ManagedVehicle.IsInvincible = false;
-                    boostTimer.Enabled = false;
+                    LandingGearState = LandingGearState.Closing;
+                    interpCam.Destroy();
+                    interpCam = null;
                 }
 
-                else if (new Control[] { Control.MoveUpDown, Control.MoveLeftRight }.Any(x => Game.IsControlPressed(0, x)))
-                    boostTimer.Enabled = false;
+                if (boostTimer.Enabled)
+                {
+                    if (Game.GameTime > boostTimer.Waiter)
+                    {
+                        ManagedVehicle.IsInvincible = false;
+                        boostTimer.Enabled = false;
+                    }
 
-                else
-                    ManagedVehicle.ApplyForce(ManagedVehicle.ForwardVector * 2);
+                    else if (new Control[] { Control.MoveUpDown, Control.MoveLeftRight }.Any(x => Game.IsControlPressed(0, x)))
+                    {
+                        ManagedVehicle.IsInvincible = false;
+                        boostTimer.Enabled = false;
+                    }
+
+                    else
+                        ManagedVehicle.ApplyForce(ManagedVehicle.ForwardVector * 1f);
+                }
             }
-        
+
             base.Update();
         }
 
