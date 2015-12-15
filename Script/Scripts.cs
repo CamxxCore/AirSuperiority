@@ -1,6 +1,8 @@
 ﻿using GTA;
 using GTA.Native;
 using GTA.Math;
+using System.Linq;
+using System;
 
 namespace AirSuperiority
 {
@@ -27,15 +29,6 @@ namespace AirSuperiority
             Function.Call(Hash.DO_SCREEN_FADE_IN, duration);
             GTA.Script.Wait(wait);
         }
-
-        public static void DisableHospitalRestart(bool toggle)
-        {
-            for (int i = 0; i <= 4; i++)
-            {
-                Function.Call(Hash.DISABLE_HOSPITAL_RESTART, i, toggle);
-            }
-        }
-
 
         /// <summary>
         /// Get random position near an entity.
@@ -72,6 +65,37 @@ namespace AirSuperiority
             }
 
             return entity.GetOffsetInWorldCoords(new Vector3(randX, randY, 0.0f));
+        }
+
+        public static Tuple<Vector3, float> GetClosestVehicleNode(Vector3 position)
+        {
+            Vector3 result;
+            OutputArgument arg, arg1, arg2;
+            arg = arg1 = arg2 = new OutputArgument();
+
+            for (int index = 0; index < 28; ++index)
+            {
+
+                Function.Call<bool>(Hash.GET_NTH_CLOSEST_VEHICLE_NODE_WITH_HEADING, position.X, position.Y, position.Z, index, arg, arg1, arg2, 9, 3.0, 2.5);
+                result = arg.GetResult<Vector3>();
+                var heading = arg1.GetResult<float>();
+                if (!Function.Call<bool>(Hash.IS_POINT_OBSCURED_BY_A_MISSION_ENTITY, result.X, result.Y, result.Z, 5f, 5f, 5f, 0))
+                {
+                    return new Tuple<Vector3, float>(result, heading);
+                }
+            }
+
+            for (int index = 0; index < 28; ++index)
+            {
+                Function.Call(Hash.GET_NTH_CLOSEST_VEHICLE_NODE, position.X, position.Y, position.Z, index, arg, 1, 1077936128, 0);
+                result = arg.GetResult<Vector3>();
+                if (!Function.Call<bool>(Hash.IS_POINT_OBSCURED_BY_A_MISSION_ENTITY, result.X, result.Y, result.Z, 5f, 5f, 5f, 0))
+                {
+                    return new Tuple<Vector3, float>(result, 0f);
+                }
+            }
+         
+            return new Tuple<Vector3, float>(position, 0f);
         }
     }
 }

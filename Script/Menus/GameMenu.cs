@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
 using NativeUI;
+using AirSuperiority.Data;
+using AirSuperiority.Script.GameManagement;
 
 namespace AirSuperiority.Script.Menus
 {
@@ -8,9 +10,11 @@ namespace AirSuperiority.Script.Menus
     {
         private readonly UIMenu mainMenu;
         private readonly MenuPool menuPool;
+        private readonly Keys ActivationKey;
 
         public GameMenu()
         {
+            ActivationKey = INIHelper.GetConfigSetting<Keys>("KeyBinds", "ActivateScript");
             mainMenu = new UIMenu("Air Superiority", "BETA");
             var menuItem = new UIMenuItem("~g~Start Script", null);
             menuItem.Activated += (x, y) => { GameManager.InitializeScript(); menuPool.CloseAllMenus(); };
@@ -24,17 +28,17 @@ namespace AirSuperiority.Script.Menus
             Tick += OnTick;
         }
 
-        private void KeyPressed(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.K)
-            {
-                mainMenu.Visible = !mainMenu.Visible;
-            }
-        }
-
         private void OnTick(object sender, EventArgs e)
         {
             menuPool.ProcessMenus();
+        }
+
+        private void KeyPressed(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == ActivationKey)
+            {
+                mainMenu.Visible = !mainMenu.Visible;
+            }
         }
     }
 }

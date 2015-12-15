@@ -1,5 +1,4 @@
 ﻿using GTA;
-using GTA.Native;
 
 namespace AirSuperiority.Script.EntityManagement
 {

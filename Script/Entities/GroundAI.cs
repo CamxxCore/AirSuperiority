@@ -1,18 +1,19 @@
 ﻿using GTA;
 using GTA.Native;
+using GTA.Math;
 using AirSuperiority.Types;
 using AirSuperiority.Script.EntityManagement;
 
 namespace AirSuperiority.Script.Entities
 {
-    public abstract class ActiveFighter
+    public class GroundAI
     {
         private ManageablePed ped;
         private ManageableVehicle vehicle;
         private ActiveTeamData team;
 
         /// <summary>
-        /// Managed ped object associated to this fighter.
+        /// Managed ped object associated to this ground asset.
         /// </summary>
         public ManageablePed ManagedPed
         {
@@ -21,7 +22,7 @@ namespace AirSuperiority.Script.Entities
         }
 
         /// <summary>
-        /// Managed vehicle object associated to this fighter.
+        /// Managed vehicle object associated to this ground asset.
         /// </summary>
         public ManageableVehicle ManagedVehicle
         {
@@ -30,7 +31,7 @@ namespace AirSuperiority.Script.Entities
         }
 
         /// <summary>
-        /// Fighters team.
+        /// Groun asset team.
         /// </summary>
         public ActiveTeamData Team
         {
@@ -38,75 +39,68 @@ namespace AirSuperiority.Script.Entities
         }
 
         /// <summary>
-        /// State of the fighters landing gear.
-        /// </summary>
-        public LandingGearState LandingGearState
-        {
-            get { return (LandingGearState)Function.Call<int>(Hash._GET_VEHICLE_LANDING_GEAR, vehicle.Handle); }
-            set { Function.Call(Hash._SET_VEHICLE_LANDING_GEAR, vehicle.Handle, (int)value); }
-        }
-
-        /// <summary>
         /// Active vehicle mission ID.
         /// </summary>
         public VehicleTask VehicleMissionType
         {
-            get { return (VehicleTask) Function.Call<int>((Hash)0x534AEBA6E5ED4CAB, vehicle.Handle); }
+            get { return (VehicleTask)Function.Call<int>((Hash)0x534AEBA6E5ED4CAB, vehicle.Handle); }
         }
 
         /// <summary>
-        /// If the ped is a local player/ human.
-        /// </summary>
-        public bool IsLocalPlayer
-        {          
-            get { return (ped.Handle == Game.Player.Character.Handle); }
-        }
-
-        /// <summary>
-        /// If the ped is in the assigned vehicle.
-        /// </summary>
-        public bool IsInVehicle
-        {
-            get { return (ped.Ped.IsInVehicle(vehicle.Vehicle)); }
-        }
-
-        /// <summary>
-        /// Assign a ManageablePed and ManageableVehicle object to this fighter.
+        /// Assign a ManageablePed and ManageableVehicle object to this ground asset.
         /// </summary>
         /// <param name="Pilot"></param>
         /// <param name="Vehicle"></param>
         /// <returns></returns>
-        public ActiveFighter Manage(ManageablePed Pilot, ManageableVehicle Vehicle)
+        public GroundAI Manage(ManageablePed Driver, ManageableVehicle Vehicle)
         {
-            ped = Pilot;
+            ped = Driver;
             vehicle = Vehicle;
             return this;
         }
 
-        /// <summary>
+    /*    /// <summary>
         /// Fight against the specifed fighter.
         /// </summary>
         /// <param name="fighter"></param>
         public void FightAgainst(ActiveFighter fighter)
         {
             ManagedPed.Ped.Task.FightAgainst(fighter.ManagedPed.Ped);
-        }
+        }*/
 
         /// <summary>
         /// Clear all ped tasks.
         /// </summary>
         public void ClearTasks()
         {
-            ManagedPed.Ped.Task.ClearAll();
+            ManagedPed.Ped.Task.ClearAllImmediately();
         }
 
         /// <summary>
-        /// Assign this fighter a team.
+        /// Assign this ground asset a team.
         /// </summary>
         /// <param name="newTeam"></param>
         public void AssignTeam(ActiveTeamData newTeam)
         {
             team = newTeam;
+        }
+
+        /// <summary>
+        /// Follow another ground asset.
+        /// </summary>
+        /// <param name="asset"></param>
+        public void StartFollow(GroundAI asset)
+        {
+            Function.Call(Hash._TASK_VEHICLE_FOLLOW, ManagedPed.Handle, ManagedVehicle.Handle, asset.ManagedPed.Handle, 40f, 262275, 10);
+        }
+
+        /// <summary>
+        /// Drive to the location.
+        /// </summary>
+        /// <param name="asset"></param>
+        public void DriveTo(Vector3 location)
+        {
+            Function.Call(Hash.TASK_VEHICLE_DRIVE_TO_COORD_LONGRANGE, ManagedPed.Handle, ManagedVehicle.Handle, location.X, location.Y, location.Z, 40.0, 262275, 10.0);
         }
 
         /// <summary>

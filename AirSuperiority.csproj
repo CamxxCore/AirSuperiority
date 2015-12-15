@@ -32,6 +32,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>bin\x64\Debug\</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <PlatformTarget>x64</PlatformTarget>
@@ -54,10 +55,28 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Resources.cs" />
-    <Compile Include="Script\TeamManager.cs" />
+    <Compile Include="ExternalSound.cs" />
+    <Compile Include="Data\INIHelper.cs" />
+    <Compile Include="Data\Logger.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Script\Entities\GroundAI.cs" />
+    <Compile Include="Script\Entities\Game\AIConvoy.cs" />
+    <Compile Include="Script\GameSound.cs" />
+    <Compile Include="Data\IniFile.cs" />
+    <Compile Include="Script\IRFlares\IRFlare.cs" />
+    <Compile Include="Script\IRFlares\IRFlareManager.cs" />
+    <Compile Include="Script\IRFlares\IRFlareSequence.cs" />
+    <Compile Include="Script\LoopedPTFX.cs" />
+    <Compile Include="Script\Game Management\SoundManager.cs" />
+    <Compile Include="Script\Game Management\TeamManager.cs" />
+    <Compile Include="Script\UI Management\UIBox.cs" />
+    <Compile Include="Types\HUDAsset.cs" />
     <Compile Include="Types\LandingGearState.cs" />
-    <Compile Include="Script\Entities\AIPlayer.cs" />
+    <Compile Include="Script\Entities\Game\AIFighter.cs" />
     <Compile Include="Script\Entity Management\EntityChangedEventArgs.cs" />
     <Compile Include="Script\Entity Management\ManagedEntity.cs" />
     <Compile Include="Script\Entity Management\ManageablePed.cs" />
@@ -74,18 +93,43 @@
     <Compile Include="Script\InterpolatingCamera.cs" />
     <Compile Include="Script\Scripts.cs" />
     <Compile Include="Script\Timer.cs" />
-    <Compile Include="Script\GameManager.cs" />
+    <Compile Include="Script\Game Management\GameManager.cs" />
     <Compile Include="Script\Entities\ActiveFighter.cs" />
-    <Compile Include="Script\Entities\LocalPlayer.cs" />
+    <Compile Include="Script\Entities\Game\LocalFighter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Script\Entity Management\ManageableVehicle.cs" />
     <Compile Include="Script\Menus\GameMenu.cs" />
-    <Compile Include="Script\UIManager.cs" />
-    <Compile Include="Types\TeamData.cs" />
+    <Compile Include="Script\UI Management\UIManager.cs" />
+    <Compile Include="Types\ActiveTeamData.cs" />
     <Compile Include="Types\TeamInfo.cs" />
+    <Compile Include="Types\VehicleTask.cs" />
     <Compile Include="Utils.cs" />
+    <Compile Include="Data\XMLHelper.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AirSuperiority.ini" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\defense_equip.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\flares_activate.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\flares_inactive.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\flares_equip.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\flares_equip1.wav" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy "$(TargetPath)" "C:\Program Files\Rockstar Games\Grand Theft Auto V\scripts\$(ProjectName).dll"</PostBuildEvent>
