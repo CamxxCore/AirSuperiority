@@ -1,5 +1,4 @@
 ﻿using GTA;
-using GTA.Native;
 using AirSuperiority.Types;
 using AirSuperiority.Script.EntityManagement;
 
@@ -30,28 +29,11 @@ namespace AirSuperiority.Script.Entities
         }
 
         /// <summary>
-        /// Fighters team.
+        /// Entity team.
         /// </summary>
         public ActiveTeamData Team
         {
             get { return team; }
-        }
-
-        /// <summary>
-        /// State of the fighters landing gear.
-        /// </summary>
-        public LandingGearState LandingGearState
-        {
-            get { return (LandingGearState)Function.Call<int>(Hash._GET_VEHICLE_LANDING_GEAR, vehicle.Handle); }
-            set { Function.Call(Hash._SET_VEHICLE_LANDING_GEAR, vehicle.Handle, (int)value); }
-        }
-
-        /// <summary>
-        /// Active vehicle mission ID.
-        /// </summary>
-        public VehicleTask VehicleMissionType
-        {
-            get { return (VehicleTask) Function.Call<int>((Hash)0x534AEBA6E5ED4CAB, vehicle.Handle); }
         }
 
         /// <summary>

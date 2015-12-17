@@ -2,7 +2,6 @@
 using GTA;
 using GTA.Math;
 using System.Linq;
-using System.IO;
 
 namespace AirSuperiority.Script.IRFlares
 {

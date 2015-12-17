@@ -74,6 +74,5 @@ namespace AirSuperiority.Data
 
             else throw new ArgumentException("Unknown type.");
         }
-
     }
 }

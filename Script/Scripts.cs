@@ -1,8 +1,8 @@
 ﻿using GTA;
 using GTA.Native;
 using GTA.Math;
-using System.Linq;
 using System;
+using System.Linq;
 
 namespace AirSuperiority
 {
@@ -96,6 +96,28 @@ namespace AirSuperiority
             }
          
             return new Tuple<Vector3, float>(position, 0f);
+        }
+
+
+        /// <summary>
+        /// Generate a random spawn position for AI
+        /// </summary>
+        /// <returns></returns>
+        public static Vector3 GetValidSpawnPos(Vector3 position)
+        {
+            for (int i = 0; i < 20; i++)
+            {
+
+                var pos = position.Around(20 * i);
+
+                if (!Function.Call<bool>(Hash.IS_POINT_OBSCURED_BY_A_MISSION_ENTITY, pos.X, pos.Y, pos.Z, 5f, 5f, 5f, 0) &&
+                    !World.GetAllVehicles().Where(y => y.Model == VehicleHash.Lazer).Any(v => v.Position.DistanceTo(pos) < 20f))
+                {
+                    return pos;
+                }
+            }
+
+            return position;
         }
     }
 }

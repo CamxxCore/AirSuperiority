@@ -15,50 +15,46 @@ namespace AirSuperiority.Script.GameManagement
     {
         public static bool Enabled { get; set; } = false;
 
-        public const int TeamCount = 4;
-
-        public const int PlayerCount = 50;
-
         public const float SpawnDist = 0.2f;
+        public const int MaxScore = 100;
 
         /// <summary>
         /// Contains information about active teams.
         /// </summary>
-        private static ActiveTeamData[] _activeTeams = new ActiveTeamData[TeamCount];
+        private static ActiveTeamData[] _activeTeams = new ActiveTeamData[Config.MaxTeams];
 
         /// <summary>
         /// World relationship groups.
         /// </summary>
-        private static List<int> rGroups = new List<int> {
-            World.AddRelationshipGroup("team1"),
-            World.AddRelationshipGroup("team2"),
-            World.AddRelationshipGroup("team3"),
-            World.AddRelationshipGroup("team4")
-        };
+        private static List<int> rGroups = Enumerable.Range(0, Config.MaxTeams)
+            .Select(i => World.AddRelationshipGroup(string.Format("team{0}", i))).ToList();
 
         /// <summary>
         /// Coordinate of map center.
         /// </summary>
-        private static readonly Vector3 CenterMap = new Vector3(-248.9207f, -752.2429f, 421.6384f);
+        public static readonly Vector3 CenterMap = new Vector3(-248.9207f, -752.2429f, 421.6384f);
 
         /// <summary>
         /// World position and heading for team spawn locations.
         /// </summary>
-        private static Tuple<Vector3, float>[] fighterSpawns = new Tuple<Vector3, float>[] {
-             new Tuple<Vector3, float>(Vector3.Lerp(new Vector3(-1722.227f, -1353.99f, 481.6384f), CenterMap, SpawnDist), -72f),
-            new Tuple<Vector3, float>(Vector3.Lerp(new Vector3(1350.13f, -596.34f, 481.6384f), CenterMap, SpawnDist), 96.70607f/*295.498f*/),
-            new Tuple<Vector3, float>(Vector3.Lerp(new Vector3(-372.45f, 523.23f, 481.6384f), CenterMap, SpawnDist), 160f/*239.1252f*/),
-            new Tuple<Vector3, float>(Vector3.Lerp(new Vector3(-161.3713f, -2634.05f, 481.6384f), CenterMap, SpawnDist), 10f/*357.9745f*/)
+        public static readonly SpawnPoint[] FighterSpawns = new SpawnPoint[] {
+            new SpawnPoint() { Position = Vector3.Lerp(new Vector3(1350.13f, -596.34f, 481.6384f), CenterMap, SpawnDist), Heading = 96.70607f },
+            new SpawnPoint() { Position = Vector3.Lerp(new Vector3(-1722.227f, -1353.99f, 481.6384f), CenterMap, SpawnDist), Heading = -72f },
+            new SpawnPoint() { Position = Vector3.Lerp(new Vector3(-1563.28f, 60.707f, 481.6384f), CenterMap, SpawnDist), Heading = -120f },
+            new SpawnPoint() { Position = Vector3.Lerp(new Vector3(-372.45f, 523.23f, 481.6384f), CenterMap, SpawnDist), Heading = 190f },
+            new SpawnPoint() { Position = Vector3.Lerp(new Vector3(-161.3713f, -2634.05f, 481.6384f), CenterMap, SpawnDist), Heading = -10f },
+            new SpawnPoint() { Position = Vector3.Lerp(new Vector3(505.179f, 128.99f, 481.6384f), CenterMap, SpawnDist), Heading = 120f },
+            new SpawnPoint() { Position = Vector3.Lerp(new Vector3(-886.338f, -1694.8f, 481.6384f), CenterMap, SpawnDist), Heading = 0f }
         };
 
         /// <summary>
         /// World position and heading for team spawn locations.
         /// </summary>
-        private static Tuple<Vector3, float>[] groundSpawns = new Tuple<Vector3, float>[] {
-            new Tuple<Vector3, float>(new Vector3(1318.396f, -557.2538f, 72.28039f), 58.57626f),
-            new Tuple<Vector3, float>(new Vector3(-1721.894f, -1094.84f, 13.07793f), 316.236f),
-            new Tuple<Vector3, float>(new Vector3(-1413.372f, 228.6124f, 215.7202f), 215.7202f),
-            new Tuple<Vector3, float>(new Vector3(-94.15818f, -2623.103f, 6.00071f), 269.5972f)
+        public static readonly SpawnPoint[] GroundSpawns = new SpawnPoint[] {
+            new SpawnPoint() { Position = new Vector3(1318.396f, -557.2538f, 72.28039f), Heading = 58.57626f },
+            new SpawnPoint() { Position = new Vector3(-1721.894f, -1094.84f, 13.07793f), Heading = 316.236f },
+            new SpawnPoint() { Position = new Vector3(-1413.372f, 228.6124f, 215.7202f), Heading = 215.7202f },
+            new SpawnPoint() { Position = new Vector3(-94.15818f, -2623.103f, 6.00071f), Heading = 269.5972f }
         };
 
         /// <summary>
@@ -104,19 +100,16 @@ namespace AirSuperiority.Script.GameManagement
         {
             var teamData = XMLHelper.ReadValues<TeamInfo>(@"scripts\AirSuperiority\assets.xml", "TeamInfo", "name", "imageAsset", "altAsset");
 
-            for (int i = 0; i < TeamCount; i++)
+            for (int i = 0; i < Config.MaxTeams; i++)
             {
                 _activeTeams[i] = default(ActiveTeamData);
                 _activeTeams[i].TeamInfo = teamData.Where(x => !_activeTeams.Any(y => y.TeamInfo.FriendlyName == x.FriendlyName)).GetRandomItem();
                 _activeTeams[i].Index = i;
                 _activeTeams[i].RelationshipGroup = rGroups[i];
                 _activeTeams[i].Score = 0;
-                _activeTeams[i].FighterSpawn = fighterSpawns[i].Item1;
-                _activeTeams[i].SpawnHeading = fighterSpawns[i].Item2;
-                _activeTeams[i].GroundSpawn = groundSpawns[i].Item1;
-                _activeTeams[i].GroundHeading = groundSpawns[i].Item2;
+                _activeTeams[i].FighterSpawn = FighterSpawns[i].Position;
+                _activeTeams[i].SpawnHeading = FighterSpawns[i].Heading;
                 _activeTeams[i].ActiveFighters = new List<ActiveFighter>();
-                _activeTeams[i].ActiveGroundAssets = new List<AIConvoy>();
                 UIManager.UpdateTeamInfoFriendlyName(i, _activeTeams[i].TeamInfo.FriendlyName);
                 UIManager.UpdateTeamInfoFlagAsset(i, _activeTeams[i].TeamInfo.ImageAsset);
             }
@@ -163,11 +156,11 @@ namespace AirSuperiority.Script.GameManagement
         /// Register score for the team.
         /// </summary>
         /// <param name="score"></param>
-        public static void RegisterScoreForTeam(int team, int score)
+        public static async void RegisterScoreForTeam(ActiveTeamData team, int score)
         {
-            var mScore = _activeTeams[team].Score + score / 100;
-            if (mScore > 0)
-                _activeTeams[team].Score = mScore;
+            var tScore = score / 100;
+            if (tScore > 0)
+             team.Score = await UIManager.QueueTeamInfoProgressBar(team, tScore);
         }
 
         /// <summary>
@@ -183,23 +176,15 @@ namespace AirSuperiority.Script.GameManagement
                 case 1: return Color.Red;
                 case 2: return Color.Blue;
                 case 3: return Color.Yellow;
-                default: throw new ArgumentOutOfRangeException(string.Format("index: Out of range.", index));
+                case 4: return Color.Orange;
+                case 5: return Color.Purple;
+                case 6: return Color.Fuchsia;
+                case 7: return Color.Gold;
+                case 8: return Color.Gray;
+                case 9: return Color.SkyBlue;
+                default: return Color.Red;
             }
         }
-
-        /// <summary>
-        /// Gets the blip color representing the team at the given index.
-        /// </summary>
-        /// <param name="index"></param>
-        /// <returns></returns>
-        public static BlipColor GetBlipColorFromTeamIndex(int index)
-        {
-            return index == 0 ?
-              BlipColor.Green : index == 1 ?
-              BlipColor.Red : index == 3 ?
-              BlipColor.Blue : BlipColor.Yellow;
-        }
-
 
         /// <summary>
         /// Update team related information.
@@ -209,12 +194,13 @@ namespace AirSuperiority.Script.GameManagement
             if (Enabled)
             {
                 var scores = _activeTeams.Select(x => x.Score).ToArray();
+
                 //update team score UI
-                for (int i = 0; i < TeamCount; i++)
+                for (int i = 0; i < Config.MaxTeams; i++)
                 {
                     if (_activeTeams[i].Score > 0 && _activeTeams[i].Score == scores.Max())
                     {
-                        if (_activeTeams[i].Score > 100)
+                        if (_activeTeams[i].Score > MaxScore)
                         {
                             UIManager.ShowWinnerInfoUI(_activeTeams[i]);
                             Enabled = false;
@@ -225,14 +211,13 @@ namespace AirSuperiority.Script.GameManagement
                         {
                             _activeTeams[i].InControl = true;
                             string teamCl = GetColorFromTeamIndex(_activeTeams[i].Index).Name;
-                            UIManager.NotifyWithWait(string.Format("{0} took the lead", teamCl), 5000);    
+                            UIManager.NotifyWithWait(string.Format("{0} team took the lead", teamCl), 5000);
+                            SoundManager.Step();
                         }
                     }
 
                     else
                         _activeTeams[i].InControl = false;
-
-                    UIManager.UpdateTeamInfoProgressBar(i, scores[i]);
                 }
             }
         }

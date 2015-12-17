@@ -2,6 +2,7 @@
 using GTA;
 using GTA.Native;
 using System.IO;
+using System.Media;
 
 namespace AirSuperiority.Script.GameManagement
 {
@@ -56,7 +57,7 @@ namespace AirSuperiority.Script.GameManagement
 
         public static void PlayExternalSound(Stream soundStream)
         {
-            var extSound = new ExternalSound(soundStream);
+            var extSound = new SoundPlayer(soundStream);
             extSound.Play();
         }
 

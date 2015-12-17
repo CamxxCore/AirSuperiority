@@ -6,6 +6,8 @@ using GTA.Native;
 using AirSuperiority.Types;
 using AirSuperiority.Script.Entities;
 using AirSuperiority.Script.GameManagement;
+using System.Threading.Tasks;
+using System.Threading;
 using Font = GTA.Font;
 
 namespace AirSuperiority.Script.UIManagement
@@ -29,13 +31,12 @@ namespace AirSuperiority.Script.UIManagement
         private static string[] _activeHudAssets = new string[3];
         private static HUDAsset[] _hudAssets = new HUDAsset[3];
 
-        private static int[] _teamScores = new int[TeamManager.TeamCount];
-        private static string[] _teamNames = new string[TeamManager.TeamCount];
-        private static string[] _teamImages = new string[TeamManager.TeamCount];
+        private static int[] _teamScores = new int[Config.MaxTeams];
+        private static string[] _teamNames = new string[Config.MaxTeams];
+        private static string[] _teamImages = new string[Config.MaxTeams];
 
         public UIManager()
         {
-
             notifyTimer = new Timer(5000);
             killInfoTimer = new Timer(4500);
             scaleformDisplayTimer = new Timer(4000);
@@ -43,15 +44,7 @@ namespace AirSuperiority.Script.UIManagement
             scaleform = new Scaleform(Function.Call<int>(Hash.REQUEST_SCALEFORM_MOVIE, "MP_BIG_MESSAGE_FREEMODE"));
             killInfoUI = new UIBox(new Point((Game.ScreenResolution.Width / 2) - (Game.ScreenResolution.Width / 10), (Game.ScreenResolution.Height - 40) - (Game.ScreenResolution.Height / 10)), new Size(200, 60));
             centerText = new UIText(null, new Point(Game.ScreenResolution.Width / 2, UI.HEIGHT - 38), 0.70f, Color.White, Font.ChaletComprimeCologne, true);
-            teamInfoHUD = new UIContainer(new Point(Game.ScreenResolution.Width - Game.ScreenResolution.Width / 4, UI.HEIGHT / 6), new Size(180, 125), Color.FromArgb(180, Color.Black));
-            /* teamInfoHUD.Items.Add(new UIRectangle(new Point(51, 13), new Size(120, 11), Color.Orange));
-             teamInfoHUD.Items.Add(new UIRectangle(new Point(51, 43), new Size(120, 11), Color.Orange));
-             teamInfoHUD.Items.Add(new UIRectangle(new Point(51, 73), new Size(120, 11), Color.Orange));
-             teamInfoHUD.Items.Add(new UIRectangle(new Point(51, 103), new Size(120, 11), Color.Orange));
-             teamInfoHUD.Items.Add(new UIRectangle(new Point(22, 12), new Size(21, 13), Color.FromArgb(180, Color.Green)));
-             teamInfoHUD.Items.Add(new UIRectangle(new Point(22, 42), new Size(21, 13), Color.FromArgb(180, Color.Red)));
-             teamInfoHUD.Items.Add(new UIRectangle(new Point(22, 72), new Size(21, 13), Color.FromArgb(180, Color.Blue)));
-             teamInfoHUD.Items.Add(new UIRectangle(new Point(22, 102), new Size(21, 13), Color.FromArgb(180, Color.Yellow)));*/
+            teamInfoHUD = new UIContainer(new Point(Game.ScreenResolution.Width - Game.ScreenResolution.Width / 4, UI.HEIGHT / 6), new Size(180, Config.MaxTeams * 31), Color.FromArgb(180, Color.Black));
             SetupTeamInfoHUD();
             _hudAssets[0] = new HUDAsset() { ActiveAsset= @"scripts\AirSuperiority\hud\fireext\1.png", InactiveAsset = @"scripts\AirSuperiority\hud\fireext\2.png" };
             _hudAssets[1] = new HUDAsset() { ActiveAsset = @"scripts\AirSuperiority\hud\irflares\1.png", InactiveAsset = @"scripts\AirSuperiority\hud\irflares\2.png" };
@@ -114,7 +107,7 @@ namespace AirSuperiority.Script.UIManagement
                 centerText.Draw();
 
 
-                for (int i = 0; i < TeamManager.TeamCount; i++)
+                for (int i = 0; i < Config.MaxTeams; i++)
                 {
                     teamInfoHUD.Items[i] = new UIRectangle(new Point(50, 12 + (30 * i)), new Size(_teamScores[i], 11), Color.Orange);
                 }
@@ -122,7 +115,7 @@ namespace AirSuperiority.Script.UIManagement
                 if (GameManager.LocalPlayer.ManagedPed.IsAlive)
                 {
 
-                    for (int i = 0; i < TeamManager.TeamCount; i++)
+                    for (int i = 0; i < Config.MaxTeams; i++)
                     {
                         if (System.IO.File.Exists(_teamImages[i]))
                         {
@@ -141,8 +134,6 @@ namespace AirSuperiority.Script.UIManagement
                     }
 
                     teamInfoHUD.Draw();
-
-                    if (GameManager.LocalPlayer.IsInVehicle)
                     DrawHUDAssets();
                 }
             }
@@ -150,21 +141,18 @@ namespace AirSuperiority.Script.UIManagement
 
         private void SetupTeamInfoHUD()
         {
-            var colors = new Color[] { Color.Green, Color.Red, Color.Blue, Color.Yellow };
 
-            for (int i = 0; i < TeamManager.TeamCount; i++)
+            for (int i = 0; i < Config.MaxTeams; i++)
             {
-                teamInfoHUD.Items.Add(new UIRectangle(new Point(51, (30 * i) + 13), new Size(120, 11), Color.Orange));
+                teamInfoHUD.Items.Add(new UIRectangle(new Point(51, (30 * i) + 13), new Size(120, 11), Color.FromArgb(180, Color.Orange)));
            
             }
 
-            for (int i = 0; i < TeamManager.TeamCount; i++)
+            for (int i = 0; i < Config.MaxTeams; i++)
             {
-                teamInfoHUD.Items.Add(new UIRectangle(new Point(22, (30 * i) + 12), new Size(21, 13), Color.FromArgb(180, colors[i])));
-
+                var cl = TeamManager.GetColorFromTeamIndex(i);
+                teamInfoHUD.Items.Add(new UIRectangle(new Point(22, (30 * i) + 12), new Size(21, 13), Color.FromArgb(180, cl)));
             }
-
-            //  
         }
 
         public static void SetHUDStatus(int index, bool active)
@@ -193,10 +181,7 @@ namespace AirSuperiority.Script.UIManagement
         {
             Function.Call(Hash.PLAY_MISSION_COMPLETE_AUDIO, "MICHAEL_BIG_01");
             Wait(1550);
-            string str = team.Index == 0 ?
-                            "~g~Green" : team.Index == 1 ?
-                            "~r~Red" : team.Index == 2 ?
-                            "~b~Blue" : "Yellow";
+            string str = TeamManager.GetColorFromTeamIndex(team.Index).Name;
             scaleform.CallFunction("SHOW_MISSION_PASSED_MESSAGE", string.Format("{0} takes Victory!", str), "", 100, true, 0, true);
             scaleformDisplayTimer.Start();
         }
@@ -229,6 +214,24 @@ namespace AirSuperiority.Script.UIManagement
         public static void UpdateTeamInfoProgressBar(int team, int score)
         {
             _teamScores[team] = score % 120;
+        }
+
+        private static int InterpolateTeamScore(int team, int score)
+        {
+            var value = _teamScores[team];
+
+            for (int i = value; i < (value + score); i++)
+            {
+                _teamScores[team] = i;
+                Thread.Sleep(100);
+            }
+
+            return _teamScores[team];
+        }
+
+        public static async Task<int> QueueTeamInfoProgressBar(ActiveTeamData team, int score)
+        {
+            return await Task.Factory.StartNew(() => InterpolateTeamScore(team.Index, team.Score + score));
         }
 
         /// <summary>

@@ -28,7 +28,7 @@ namespace AirSuperiority.Script
         {
             mainCamera.IsActive = true;
             World.RenderingCamera = mainCamera;
-            Function.Call(Hash.RENDER_SCRIPT_CAMS, 0, 1, mainCamera.Handle, 1, 2, 1);
+            Function.Call(Hash.RENDER_SCRIPT_CAMS, 0, 1, mainCamera.Handle, 1, 1, 1);
         }
 
         /// <summary>

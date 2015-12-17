@@ -1,5 +1,4 @@
-﻿using GTA;
-using GTA.Native;
+﻿using GTA.Native;
 using GTA.Math;
 using AirSuperiority.Types;
 using AirSuperiority.Script.EntityManagement;
@@ -31,7 +30,7 @@ namespace AirSuperiority.Script.Entities
         }
 
         /// <summary>
-        /// Groun asset team.
+        /// Ground asset team.
         /// </summary>
         public ActiveTeamData Team
         {
@@ -58,15 +57,6 @@ namespace AirSuperiority.Script.Entities
             vehicle = Vehicle;
             return this;
         }
-
-    /*    /// <summary>
-        /// Fight against the specifed fighter.
-        /// </summary>
-        /// <param name="fighter"></param>
-        public void FightAgainst(ActiveFighter fighter)
-        {
-            ManagedPed.Ped.Task.FightAgainst(fighter.ManagedPed.Ped);
-        }*/
 
         /// <summary>
         /// Clear all ped tasks.

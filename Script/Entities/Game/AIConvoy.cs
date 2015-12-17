@@ -32,7 +32,6 @@ namespace AirSuperiority.Script.Entities
 
             vehicle.AddBlip();
             vehicle.CurrentBlip.Sprite = BlipSprite.BountyHit;
-            vehicle.CurrentBlip.Color = TeamManager.GetBlipColorFromTeamIndex(leader.Team.Index);
 
             var ped = new ManageablePed(World.CreatePed(pedModel, spawnPos));
             ped.Ped.RelationshipGroup = leader.Team.RelationshipGroup;
@@ -70,7 +69,6 @@ namespace AirSuperiority.Script.Entities
                 vehicle.Vehicle.Heading = leader.Team.GroundHeading;
                 vehicle.AddBlip();
                 vehicle.CurrentBlip.Sprite = BlipSprite.BountyHit;
-                vehicle.CurrentBlip.Color = TeamManager.GetBlipColorFromTeamIndex(leader.Team.Index);
 
                 Function.Call(Hash.SET_ENTITY_LOAD_COLLISION_FLAG, vehicle.Handle, true);
 
@@ -105,9 +103,6 @@ namespace AirSuperiority.Script.Entities
                 UI.Notify(string.Format("{0} team's ground asset's have almost reached the city.", TeamManager.GetColorFromTeamIndex(leader.Team.Index)));
                            
             }
-            //if (!Function.Call<bool>((Hash)0xE9676F61BC0B3321, leader.ManagedVehicle.Handle))
-              //  Function.Call(Hash.REQUEST_COLLISION_AT_COORD, leader.ManagedVehicle.Position.X, leader.ManagedVehicle.Position.Y, leader.ManagedVehicle.Position.Z);
-
         }
 
         public void RemoveChildren()
@@ -115,7 +110,5 @@ namespace AirSuperiority.Script.Entities
             children.ForEach(x => x.Remove());
             children.Clear();
         }
-
-
     }
 }

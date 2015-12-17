@@ -11,12 +11,13 @@ namespace AirSuperiority.Script.Entities
 {
     public sealed class LocalFighter : ActiveFighter
     {
-        private const int EngineRepairRecharge = 20000;
-        private const int IRFlaresRecharge = 15000;
+        private const int EngineRepairRecharge = 21000;
+        private const int IRFlaresRecharge = 20000;
 
         private IRFlareManager irFlares;
         private InterpolatingCamera interpCam;
         private Timer boostTimer = new Timer(5000);
+
         /// <summary>
         /// Setup fighter for the local player.
         /// </summary>
@@ -31,12 +32,10 @@ namespace AirSuperiority.Script.Entities
             //Create the vehicle
             var vehicle = new ManageableVehicle(World.CreateVehicle(vehModel, Team.FighterSpawn));
             vehicle.Heading = Team.SpawnHeading;
-           // vehicle.Position = vehicle.Position - vehicle.ForwardVector * 150;// + vehicle.UpVector * 50;
 
             vehicle.Vehicle.EngineRunning = true;
             vehicle.IsInvincible = true;
-            vehicle.MaxHealth = 10000;
-            vehicle.MaxSpeed = 115;
+            vehicle.MaxSpeed = 125;
             ManagedVehicle = vehicle;
             ManagedVehicle.EnterWater += EnterWater;
 
@@ -73,6 +72,7 @@ namespace AirSuperiority.Script.Entities
 
         private void EnterWater(object sender, EntityChangedEventArgs e)
         {
+            PlayerStats.UpdatePlayerStat("deaths", 1);
             Scripts.FadeOutScreen(1500, 2000);
             ManagedVehicle.Delete();
             Setup();
@@ -135,7 +135,6 @@ namespace AirSuperiority.Script.Entities
         }
 
         bool tooFar = false;
-
         public override void Update()
         {
             irFlares.Update();
@@ -182,22 +181,26 @@ namespace AirSuperiority.Script.Entities
 
             if (ManagedPed.IsDead)
             {
+                TeamManager.RegisterScoreForTeam(Team, -250);
+                PlayerStats.UpdatePlayerStat("deaths", 1);
+            //    PlayerStats.UpdatePlayerStat("score", -250);
                 GTA.Script.Wait(7000);
                 Setup();
             }
-            
-            else if (Game.IsControlJustPressed(0, Control.ScriptRB))
-            {
-                DoIRFlares();
-            }        
 
-            else if (Game.IsControlJustPressed(0, Control.ScriptLB))
+            else if (Game.IsControlJustPressed(0, Config.GP_Ability1))
             {
                 DoFireExtinguisher();
             }
 
+            else if (Game.IsControlJustPressed(0, Config.GP_Ability2))
+            {
+                DoIRFlares();
+            }        
+
             else if (!ManagedVehicle.Vehicle.IsDriveable)
             {
+                PlayerStats.UpdatePlayerStat("deaths", 1);
                 Scripts.FadeOutScreen(1500, 2000);
                 ManagedVehicle.Delete();
                 Setup();
@@ -230,7 +233,7 @@ namespace AirSuperiority.Script.Entities
                 {
                     if (interpCam != null && !Function.Call<bool>(Hash.IS_CAM_RENDERING, interpCam.MainCamera.Handle))
                     {
-                        LandingGearState = LandingGearState.Closing;
+                        ManagedVehicle.LandingGearState = LandingGearState.Closing;
                         interpCam.Destroy();
                         interpCam = null;
                     }
@@ -243,7 +246,7 @@ namespace AirSuperiority.Script.Entities
                             SoundManager.Step();
                             ManagedVehicle.IsInvincible = false;
                             boostTimer.Enabled = false;
-                            LandingGearState = LandingGearState.Closing;
+                            ManagedVehicle.LandingGearState = LandingGearState.Closing;
                         }
       
                         else

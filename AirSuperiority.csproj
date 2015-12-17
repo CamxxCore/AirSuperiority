@@ -55,9 +55,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ExternalSound.cs" />
+    <Compile Include="Config.cs" />
     <Compile Include="Data\INIHelper.cs" />
-    <Compile Include="Data\Logger.cs" />
+    <Compile Include="Logger.cs" />
+    <Compile Include="PlayerStats.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -74,6 +75,7 @@
     <Compile Include="Script\Game Management\SoundManager.cs" />
     <Compile Include="Script\Game Management\TeamManager.cs" />
     <Compile Include="Script\UI Management\UIBox.cs" />
+    <Compile Include="Types\FighterSpawn.cs" />
     <Compile Include="Types\HUDAsset.cs" />
     <Compile Include="Types\LandingGearState.cs" />
     <Compile Include="Script\Entities\Game\AIFighter.cs" />
@@ -117,9 +119,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\defense_equip.wav" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\flares_activate.wav" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\flares_inactive.wav" />
