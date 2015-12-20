@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text;
 using System.IO;
-using GTA.Native;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
 
@@ -17,10 +16,9 @@ namespace AirSuperiority
         public static async void WritePlayerStat(string statName, int value)
         {
             string str = encrypt(string.Format("{0}>{1}", statName, value));
-
             try
             {
-                using (var fstream = new FileStream(FilePath, FileMode.OpenOrCreate))
+                using (var fstream = new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
                 {
                     int seekPos = 0;
                     byte[] buffer = new byte[24];
@@ -58,6 +56,66 @@ namespace AirSuperiority
 
         }
 
+        /*public static async void WritePlayerStatsRange(List<KeyValuePair<string, int>> stats)
+        {
+            try
+            {
+                using (var fstream = new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+                {
+                    using (StreamWriter writer = File.AppendText(FilePath))
+                    {
+                        foreach (var stat in stats)
+                        {
+                            string str = encrypt(string.Format("{0}>{1}", stat.Key, stat.Value));
+
+                            int seekPos = 0;
+                            byte[] buffer = new byte[24];
+
+                            while (seekPos < fstream.Length)
+                            {
+                                fstream.Seek(seekPos, SeekOrigin.Begin);
+                                await fstream.ReadAsync(buffer, 0, 24);
+                                var line = decrypt(Encoding.ASCII.GetString(buffer));
+                                var keyVal = line.Substring(0, line.IndexOf('>'));
+                                if (keyVal == stat.Key)
+                                {
+                                    using (StreamWriter sWriter = new StreamWriter(fstream))
+                                    {
+                                        writer.BaseStream.Seek(seekPos, SeekOrigin.Begin);
+                                        writer.BaseStream.Write(Encoding.ASCII.GetBytes(str), 0, 24);
+                                        writer.Flush();
+                                        writer.Close();
+                                    }
+                                    return;
+                                }
+                                seekPos += 24;
+                            }
+
+                            if (writer.BaseStream.CanWrite)
+                            {
+                                writer.Write(str);
+                                writer.Flush();
+                            }
+                        }
+
+                        writer.Close();
+                    }
+                }
+            }
+
+            catch (IOException ex)
+            {
+                GTA.UI.Notify(string.Format("~r~Failed to write to stats file.\n~w~{0}", ex.Message));
+            }
+        }*/
+
+        public static void UpdatePlayerStats(string stat, int value)
+        {
+            var data = ReadPlayerStat(stat);
+            var statVal = data == -1 ? value : data + value;
+            WritePlayerStat(stat, statVal);
+        }
+
         public static int ReadPlayerStat(string statName)
         {
             var stat = ReadPlayerStatAsync(statName);
@@ -68,7 +126,7 @@ namespace AirSuperiority
         {
             try
             {
-                using (var fstream = new FileStream(FilePath, FileMode.OpenOrCreate))
+                using (var fstream = new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
                 {
                     int seekPos = 0;
                     byte[] buffer = new byte[24];
@@ -95,12 +153,6 @@ namespace AirSuperiority
             }
         }
 
-        public static void UpdatePlayerStat(string statName, int value)
-        {
-            var data = ReadPlayerStat(statName);
-            var statVal = data == -1 ? value : data + value;
-            WritePlayerStat(statName, statVal);
-        }
 
         private static string encrypt(string plainText)
         {

@@ -21,14 +21,14 @@ namespace AirSuperiority.Script.Entities
             leader = new GroundAI();
             TeamManager.SetupTeam(this);
 
-            var spawnPos = leader.Team.GroundSpawn;
+            var spawnPos = leader.Team.GroundSpawnPoint.Position;
             var pedModel = new Model(PedHash.Pilot02SMM);
             var vehModel = new Model(VehicleHash.Barracks);
                     
             var vehicle = new ManageableVehicle(World.CreateVehicle(vehModel, spawnPos));
 
             vehicle.Vehicle.EngineRunning = true;
-            vehicle.Vehicle.Heading = leader.Team.GroundHeading;
+            vehicle.Vehicle.Heading = leader.Team.GroundSpawnPoint.Heading;
 
             vehicle.AddBlip();
             vehicle.CurrentBlip.Sprite = BlipSprite.BountyHit;
@@ -47,7 +47,7 @@ namespace AirSuperiority.Script.Entities
 
         public void AddChildren(int count = 0)
         {
-            var spawnPos = leader.Team.GroundSpawn;
+            var spawnPos = leader.Team.GroundSpawnPoint.Position;
             var pedModel = new Model(PedHash.Pilot02SMM);
             var vehModel = new Model(VehicleHash.Barracks3);  
 
@@ -66,7 +66,7 @@ namespace AirSuperiority.Script.Entities
                 var vehicle = new ManageableVehicle(World.CreateVehicle(vehModel, pos));
 
                 vehicle.Vehicle.EngineRunning = true;
-                vehicle.Vehicle.Heading = leader.Team.GroundHeading;
+                vehicle.Vehicle.Heading = leader.Team.GroundSpawnPoint.Heading;
                 vehicle.AddBlip();
                 vehicle.CurrentBlip.Sprite = BlipSprite.BountyHit;
 
@@ -100,7 +100,7 @@ namespace AirSuperiority.Script.Entities
         {
             if (leader.ManagedVehicle.Position.DistanceTo(new Vector3(-248.9207f, -752.2429f, 25.35142f)) == 100f)
             {
-                UI.Notify(string.Format("{0} team's ground asset's have almost reached the city.", TeamManager.GetColorFromTeamIndex(leader.Team.Index)));
+                UI.Notify(string.Format("{0} team's ground asset's have almost reached the city.", leader.Team.Color.Name));
                            
             }
         }

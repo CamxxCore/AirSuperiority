@@ -8,7 +8,7 @@ namespace AirSuperiority.Script.Menus
 {
     public class GameMenu : GTA.Script
     {
-        private readonly UIMenu mainMenu, statsMenu;
+        private readonly UIMenu mainMenu, statsMenu, unlocksMenu;
         private readonly MenuPool menuPool;
 
         public GameMenu()
@@ -19,6 +19,9 @@ namespace AirSuperiority.Script.Menus
             mainMenu.AddItem(menuItem);
             menuItem = new UIMenuItem("~r~Stop Script");
             menuItem.Activated += (x, y) => GameManager.StopScript();
+            mainMenu.AddItem(menuItem);
+            menuItem = new UIMenuItem("Unlocks (coming soon)");
+            menuItem.Enabled = false;
             mainMenu.AddItem(menuItem);
             menuItem = new UIMenuItem("View Stats");
             mainMenu.AddItem(menuItem);
@@ -35,7 +38,7 @@ namespace AirSuperiority.Script.Menus
             menuItem = new UIMenuItem("Total Score: --");
             menuItem.Enabled = false;
             statsMenu.AddItem(menuItem);
-            mainMenu.BindMenuToItem(statsMenu, mainMenu.MenuItems[2]);
+            mainMenu.BindMenuToItem(statsMenu, mainMenu.MenuItems[3]);
             mainMenu.OnItemSelect += MainMenu_OnItemSelect;
             mainMenu.RefreshIndex();
             menuPool = new MenuPool();
@@ -56,8 +59,11 @@ namespace AirSuperiority.Script.Menus
             menuItem = new UIMenuItem(string.Format("Player Deaths: ~y~{0}", statVal));
             menuItem.Enabled = false;
             statsMenu.AddItem(menuItem);
-            statVal = PlayerStats.ReadPlayerStat("score");
-            menuItem = new UIMenuItem(string.Format("Player Score: ~y~{0}", statVal));
+            statVal = PlayerStats.ReadPlayerStat("exp");
+            menuItem = new UIMenuItem(string.Format("Experience Points: ~y~{0}", statVal));
+            menuItem.Enabled = false;
+            statsMenu.AddItem(menuItem);
+            menuItem = new UIMenuItem(string.Format("Player Rank: ~y~{0}", ExpRankManager.GetRankIndex(statVal)));
             menuItem.Enabled = false;
             statsMenu.AddItem(menuItem);
 
@@ -82,6 +88,11 @@ namespace AirSuperiority.Script.Menus
             {
                 mainMenu.Visible = !mainMenu.Visible;
             }
+
+           /* if (e.KeyCode == Keys.D)
+            {
+                ExpRankManager.AddRankPoints(10, true);
+            }*/
         }
     }
 }

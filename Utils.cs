@@ -2,9 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using GTA.Math;
 
 public static class Utils
 {
+    /// <summary>
+    /// Convert a rotation vector to a directional one.
+    /// </summary>
+    /// <param name="rotation"></param>
+    /// <returns></returns>
+    public static Vector3 RotationToDirection(Vector3 rotation)
+    {
+        double retZ = rotation.Z * 0.01745329f;
+        double retX = rotation.X * 0.01745329f;
+        double absX = Math.Abs(Math.Cos(retX));
+        return new Vector3((float)-(Math.Sin(retZ) * absX), (float)(Math.Cos(retZ) * absX), (float)Math.Sin(retX));
+    }
+
     /// <summary>
     /// Extension for getting a random item from a list
     /// </summary>

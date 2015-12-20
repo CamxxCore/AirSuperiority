@@ -1,10 +1,10 @@
 ﻿using GTA;
 using GTA.Math;
 using GTA.Native;
-using System.Linq;
 using AirSuperiority.Types;
 using AirSuperiority.Script.EntityManagement;
 using AirSuperiority.Script.GameManagement;
+using AirSuperiority.Script.UIManagement;
 
 namespace AirSuperiority.Script.Entities
 {
@@ -13,7 +13,9 @@ namespace AirSuperiority.Script.Entities
         private const float MaxSpeed = 125;
         private const int MaxHealth = 1;
 
-        private Timer losCheckWaiter = new Timer(5000);
+        private bool entityHUDEnabled = false;
+
+        private Timer losChecker = new Timer(6500);
 
         /// <summary>
         /// Setup fighter for the AI player.
@@ -21,9 +23,14 @@ namespace AirSuperiority.Script.Entities
         public void Setup()
         {
             var pedModel = new Model(PedHash.Pilot02SMM);
-            var vehModel = new Model(VehicleHash.Lazer);
 
-            var spawnPos = GetValidSpawnPos(Team.FighterSpawn);
+            var vehModel = new Model(new VehicleHash[] {
+                VehicleHash.Lazer,
+                VehicleHash.Besra,
+                VehicleHash.Hydra
+            }.GetRandomItem());
+
+            var spawnPos = Scripts.GetValidSpawnPos(Team.JetSpawnPoint.Position);
 
             if (!pedModel.IsLoaded)
                 pedModel.Request(1000);
@@ -33,13 +40,12 @@ namespace AirSuperiority.Script.Entities
 
             var vehicle = new ManageableVehicle(World.CreateVehicle(vehModel, spawnPos));
             vehicle.LodDistance = 2000;
-            vehicle.Heading = Team.SpawnHeading;
+            vehicle.Heading = Team.JetSpawnPoint.Heading;
             vehicle.Vehicle.EngineRunning = true;
             Function.Call(Hash.SET_VEHICLE_EXPLODES_ON_HIGH_EXPLOSION_DAMAGE, vehicle.Handle, true);
 
             vehicle.Vehicle.BodyHealth = 0.01f;
             vehicle.MaxHealth = MaxHealth;
-            vehicle.MaxSpeed = MaxSpeed;
 
             vehicle.LandingGearState = LandingGearState.Retracted;
 
@@ -48,9 +54,7 @@ namespace AirSuperiority.Script.Entities
             blip.Scale = 0.8f;
             blip.Alpha = 220;
 
-            var cl = TeamManager.GetColorFromTeamIndex(Team.Index);
-
-            Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, blip.Handle, cl.R, cl.G, cl.B);
+            Function.Call(Hash.SET_BLIP_SECONDARY_COLOUR, blip.Handle, Team.Color.R, Team.Color.G, Team.Color.B);
             Function.Call((Hash)0xB81656BC81FE24D1, blip.Handle, 1);
 
             ManagedVehicle = vehicle;
@@ -64,55 +68,39 @@ namespace AirSuperiority.Script.Entities
             Function.Call(Hash.SET_PED_COMBAT_ATTRIBUTES, ped.Handle, 52, 0);
             Function.Call(Hash.SET_PED_CAN_SWITCH_WEAPON, ped.Ped.Handle, false);
 
-            losCheckWaiter.Enabled = true;
-
             ManagedPed = ped;
+
+            losChecker.Enabled = true;
         }
 
-        /// <summary>
-        /// Generate a random spawn position for AI
-        /// </summary>
-        /// <returns></returns>
-        private Vector3 GetValidSpawnPos(Vector3 position)
-        {
-            for (int i = 0; i < 20; i++)
-            {
-                var pos = position.Around(20 * i);
-
-                if (!Function.Call<bool>(Hash.IS_POINT_OBSCURED_BY_A_MISSION_ENTITY, pos.X, pos.Y, pos.Z, 5f, 5f, 5f, 0) &&
-                    !World.GetAllVehicles().Where(y => y.Model == VehicleHash.Lazer).Any(v => v.Position.DistanceTo(pos) < 20f))
-                {
-                    return pos;
-                }
-            }
-
-            return position;
-        }
-
-        bool wentToFar = false;
+        bool wentTooFar = false;
         public override void Update()
         {
-            if (losCheckWaiter.Enabled && Game.GameTime > losCheckWaiter.Waiter)
+            if (losChecker.Enabled && Game.GameTime > losChecker.Waiter)
             {
-                var otherTeams = TeamManager.GetActiveFighters().Where(x => x.ManagedPed.Handle != ManagedPed.Handle);
+                var localPlayer = GameManager.LocalPlayer;
 
-                foreach (var fighter in otherTeams)
-                    if (ManagedVehicle.Position.DistanceTo(fighter.ManagedVehicle.Position) < 250f &&
-                        Team.Index != fighter.Team.Index &&
-                        Function.Call<bool>(Hash.HAS_ENTITY_CLEAR_LOS_TO_ENTITY, fighter.ManagedPed.Handle, ManagedVehicle.Handle))
-                    {
-                        ClearTasks();
-                        var pos = fighter.ManagedPed.Position;
-                        Function.Call(Hash.TASK_PLANE_MISSION,
-                            ManagedPed.Handle,
-                            ManagedVehicle.Handle,
-                            fighter.ManagedVehicle.Handle,
-                            fighter.ManagedPed.Handle,
-                            pos.X, pos.Y, pos.Z,
-                            6, 70.0, -1.0, 30.0, 500, 50);
-                    }
+                if (ActiveTarget != null &&
+                    !Function.Call<bool>(Hash.IS_PED_IN_COMBAT, ManagedPed.Handle, ActiveTarget.ManagedPed.Handle))
+                {
+                    ClearActiveTarget();
+                }
 
-                losCheckWaiter.Reset();
+                if (Function.Call<int>(Hash.GET_RANDOM_INT_IN_RANGE, 0, 1000) > 700 &&
+                    Function.Call<bool>(Hash.HAS_ENTITY_CLEAR_LOS_TO_ENTITY, ManagedPed.Handle, localPlayer.ManagedVehicle.Handle, 17) &&
+                    ManagedVehicle.Position.DistanceTo(localPlayer.ManagedVehicle.Position) < 180f &&
+                    Team.Index != localPlayer.Team.Index &&
+                    ActiveTarget == null)
+                {
+                    SetActiveTarget(localPlayer);
+                }
+
+                losChecker.Reset();
+            }
+
+            if (entityHUDEnabled)
+            {
+                UIManager.DrawEntityHUD(this);
             }
 
             var outArg = new OutputArgument();
@@ -124,16 +112,6 @@ namespace AirSuperiority.Script.Entities
                     Function.Call(Hash.SET_CURRENT_PED_VEHICLE_WEAPON, ManagedPed.Handle, weaponHash);
             }
 
-            if (ManagedVehicle.Vehicle.Speed < 70f)
-            {
-                ManagedVehicle.Vehicle.Speed++;
-            }
-
-            if (!ManagedPed.Ped.IsInCombat)
-            {
-                ManagedPed.Ped.Task.FightAgainstHatedTargets(10000f);
-            }
-
             if (ManagedVehicle.Position.DistanceTo(new Vector3(-248.9207f, -752.2429f, ManagedVehicle.Position.Z)) > 2400f)
             {
                 Team.ActiveFighters.Remove(this);
@@ -141,18 +119,44 @@ namespace AirSuperiority.Script.Entities
                 return;
             }
 
-            if (ManagedVehicle.Position.DistanceTo(new Vector3(-248.9207f, -752.2429f, ManagedVehicle.Position.Z)) > 700f && !wentToFar)
+            if (ManagedVehicle.MissionType == VehicleTask.Injured && ManagedVehicle.Vehicle.Speed < 70f)
             {
-                Function.Call<bool>(Hash.TASK_VEHICLE_DRIVE_TO_COORD, ManagedPed.Handle, ManagedVehicle.Handle, -248.9207f, -752.2429f, 421.6384f, MaxSpeed, 1, ManagedVehicle.Model.Hash, 262144, -1.0, -1.0);
-                wentToFar = true;
+                ManagedVehicle.Vehicle.Speed++;
             }
 
-            else if (wentToFar && ManagedVehicle.Position.DistanceTo(new Vector3(-248.9207f, -752.2429f, ManagedVehicle.Position.Z)) < 700f)
+            if (ManagedVehicle.Position.DistanceTo(new Vector3(-248.9207f, -752.2429f, ManagedVehicle.Position.Z)) > 700f && !wentTooFar)
             {
-                wentToFar = false;
+                if (ActiveTarget == null)
+                {
+                    var pos = TeamManager.CenterMap;
+                    Function.Call(Hash.TASK_PLANE_MISSION,
+                                ManagedPed.Handle,
+                                ManagedVehicle.Handle,
+                                0,
+                                0,
+                                pos.X, pos.Y, pos.Z,
+                                6, 5.0, 15.0, 30.0, 500, 80);
+                }
+                       
+                wentTooFar = true;
+            }
+
+            else if (wentTooFar && ManagedVehicle.Position.DistanceTo(new Vector3(-248.9207f, -752.2429f, ManagedVehicle.Position.Z)) < 700f)
+            {
+                if (!ManagedPed.Ped.IsInCombat)
+                {
+                    ManagedPed.Ped.Task.FightAgainstHatedTargets(2000f);
+                }
+
+                wentTooFar = false;
             }
 
             base.Update();
+        }
+
+        public void SetEntityHUDEnabled()
+        {
+            entityHUDEnabled = true;
         }
 
         /// <summary>

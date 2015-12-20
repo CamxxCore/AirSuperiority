@@ -1,12 +1,10 @@
-﻿using System;
-using GTA;
-using GTA.Native;
+﻿using GTA.Native;
 using System.IO;
 using System.Media;
 
 namespace AirSuperiority.Script.GameManagement
 {
-    public class SoundManager : GTA.Script
+    public class SoundManager
     {
         private static string[] soundAssets = new string[] {
             "SM_W1_START_ALL",
@@ -21,21 +19,9 @@ namespace AirSuperiority.Script.GameManagement
         };     
           
         public SoundManager()
-        {
-            Tick += OnTick; 
-        }
-
-        private void OnTick(object sender, EventArgs e)
-        {
-            if (stepTimer.Enabled && Game.GameTime > stepTimer.Waiter)
-            {
-                Step();
-                stepTimer.Reset();
-            }
-        }
+        { }
 
         private static int currentIndex;
-        private static Timer stepTimer = new Timer(60000);
 
         public static void Step(int soundIndex = 0)
         {
@@ -51,8 +37,6 @@ namespace AirSuperiority.Script.GameManagement
                 currentIndex++;
                 currentIndex %= soundAssets.Length;
             }
-
-            stepTimer.Reset();
         }
 
         public static void PlayExternalSound(Stream soundStream)

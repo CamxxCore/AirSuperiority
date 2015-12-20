@@ -1,7 +1,6 @@
 ﻿using System.Drawing;
 using GTA;
 using AirSuperiority.Script.Entities;
-using AirSuperiority.Script.GameManagement;
 
 namespace AirSuperiority.Script.UIManagement
 {
@@ -11,7 +10,7 @@ namespace AirSuperiority.Script.UIManagement
         private Point position;
         private Size size;
         
-        public UIBox(Point position, Size size) : base(position, size, Color.Black)
+        public UIBox(Point position, Size size) : base(position, size, Color.FromArgb(240, Color.Black))
         {
             this.position = position;
             this.size = size;
@@ -28,7 +27,7 @@ namespace AirSuperiority.Script.UIManagement
             Items.Add(new UIText("AI Player", new Point(14, 16), 0.4f, Color.White, GTA.Font.ChaletComprimeCologne, false));
             Items.Add(new UIText(fighter.Team.TeamInfo.FriendlyName, new Point(14, 35), 0.4f, Color.White, GTA.Font.ChaletComprimeCologne, false));
             Items.Add(new UIText("KILLED", new Point(78, 5), 0.34f, Color.White, GTA.Font.Monospace, false));
-            Items.Add(new UIRectangle(new Point(166, 40), new Size(21, 13), Color.FromArgb(180, TeamManager.GetColorFromTeamIndex(fighter.Team.Index))));
+            Items.Add(new UIRectangle(new Point(166, 40), new Size(21, 13), Color.FromArgb(180, fighter.Team.Color)));
             imageAsset = fighter.Team.TeamInfo.AltImageAsset;
             return this;
         }

@@ -1,6 +1,5 @@
 ﻿using System.Windows.Forms;
 using AirSuperiority.Data;
-using GTA;
 
 namespace AirSuperiority
 {

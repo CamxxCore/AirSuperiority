@@ -111,7 +111,7 @@ namespace AirSuperiority
                 var pos = position.Around(20 * i);
 
                 if (!Function.Call<bool>(Hash.IS_POINT_OBSCURED_BY_A_MISSION_ENTITY, pos.X, pos.Y, pos.Z, 5f, 5f, 5f, 0) &&
-                    !World.GetAllVehicles().Where(y => y.Model == VehicleHash.Lazer).Any(v => v.Position.DistanceTo(pos) < 20f))
+                    !World.GetAllVehicles().Any(v => v.Position.DistanceTo(pos) < 20f))
                 {
                     return pos;
                 }

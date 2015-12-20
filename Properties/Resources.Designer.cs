@@ -61,12 +61,22 @@ namespace AirSuperiority.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to [KeyBinds]
+        ///   Looks up a localized string similar to [General]
+        ///;  General Settings --&gt;
+        ///
+        ///MaxTeams= 4
+        ///;  Amount of teams.
+        ///
+        ///MaxPlayers= 50
+        ///;  Max amount of players.
+        ///
+        ///[KeyBinds]
+        ///;  Binds for the keyboard --&gt;
         ///
         ///ActivateScript = K
         ///;  Script activation key.
         ///
-        ///EngineRepair= X
+        ///EngineRepair= Z
         ///;  Engine repair activation key.
         ///
         ///Countermeasures= X
@@ -75,7 +85,8 @@ namespace AirSuperiority.Properties {
         ///;-- You can use any keys from the Windows Forms key enumeration found here:
         ///;https://msdn.microsoft.com/en-us/library/system.windows.forms.keys%28v=vs.110%29.aspx
         ///
-        ///.
+        ///[ControllerBinds]
+        ///;  [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string AirSuperiority {
             get {
@@ -116,6 +127,15 @@ namespace AirSuperiority.Properties {
         internal static System.IO.UnmanagedMemoryStream flares_inactive {
             get {
                 return ResourceManager.GetStream("flares_inactive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.IO.UnmanagedMemoryStream similar to System.IO.MemoryStream.
+        /// </summary>
+        internal static System.IO.UnmanagedMemoryStream rank_achieved {
+            get {
+                return ResourceManager.GetStream("rank_achieved", resourceCulture);
             }
         }
     }

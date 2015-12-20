@@ -11,8 +11,8 @@ namespace AirSuperiority.Script.Entities
 {
     public sealed class LocalFighter : ActiveFighter
     {
-        private const int EngineRepairRecharge = 21000;
-        private const int IRFlaresRecharge = 20000;
+        private const int EngineRepairRecharge = 24000;
+        private const int IRFlaresRecharge = 22000;
 
         private IRFlareManager irFlares;
         private InterpolatingCamera interpCam;
@@ -23,19 +23,18 @@ namespace AirSuperiority.Script.Entities
         /// </summary>
         public void Setup()
         {
-
             var vehModel = new Model(VehicleHash.Lazer);
 
             if (!vehModel.IsLoaded)
                 vehModel.Request(1000);
 
             //Create the vehicle
-            var vehicle = new ManageableVehicle(World.CreateVehicle(vehModel, Team.FighterSpawn));
-            vehicle.Heading = Team.SpawnHeading;
+            var vehicle = new ManageableVehicle(World.CreateVehicle(vehModel, Team.JetSpawnPoint.Position));
+            vehicle.Heading = Team.JetSpawnPoint.Heading;
 
             vehicle.Vehicle.EngineRunning = true;
             vehicle.IsInvincible = true;
-            vehicle.MaxSpeed = 125;
+            vehicle.MaxSpeed = 110;
             ManagedVehicle = vehicle;
             ManagedVehicle.EnterWater += EnterWater;
 
@@ -72,7 +71,7 @@ namespace AirSuperiority.Script.Entities
 
         private void EnterWater(object sender, EntityChangedEventArgs e)
         {
-            PlayerStats.UpdatePlayerStat("deaths", 1);
+            PlayerStats.UpdatePlayerStats("deaths", 1);
             Scripts.FadeOutScreen(1500, 2000);
             ManagedVehicle.Delete();
             Setup();
@@ -98,7 +97,7 @@ namespace AirSuperiority.Script.Entities
             engineFX1.Start(ManagedVehicle.Vehicle, 4f, new Vector3(0f, 1f, 0), new Vector3(89.5f, 0f, 0), (Bone) Function.Call<int>((Hash)0xFB71170B7E76ACBA, ManagedVehicle.Handle, "afterburner")); // ENTITY::GET_ENTITY_BONE_INDEX_BY_NAME           
             Function.Call((Hash)0xDCB194B85EF7B541, engineFX1.Handle, 3000.0f);
             engineFXTimer.Start();
-            UIManager.SetHUDStatus(0, false);
+            UIManager.SetHUDIcon(0, false);
         }
 
         public void DoIRFlares()
@@ -109,7 +108,7 @@ namespace AirSuperiority.Script.Entities
 
             irFlares.Start();
             irFlaresRecharge.Start();
-            UIManager.SetHUDStatus(1, false);
+            UIManager.SetHUDIcon(1, false);
         }
 
         private void PlayEquipSound(int id)
@@ -150,7 +149,7 @@ namespace AirSuperiority.Script.Entities
                 {
                     UI.Notify("Flares Available.");
                     irFlaresRecharge.Enabled = false;
-                    UIManager.SetHUDStatus(1, true);
+                    UIManager.SetHUDIcon(1, true);
                     PlayEquipSound(1);
                 }
             }
@@ -161,7 +160,7 @@ namespace AirSuperiority.Script.Entities
                 {
                     UI.Notify("Fire Extinguisher Available.");
                     engineRepairRecharge.Enabled = false;
-                    UIManager.SetHUDStatus(0, true);
+                    UIManager.SetHUDIcon(0, true);
                 }
             }
 
@@ -182,8 +181,8 @@ namespace AirSuperiority.Script.Entities
             if (ManagedPed.IsDead)
             {
                 TeamManager.RegisterScoreForTeam(Team, -250);
-                PlayerStats.UpdatePlayerStat("deaths", 1);
-            //    PlayerStats.UpdatePlayerStat("score", -250);
+                PlayerStats.UpdatePlayerStats("deaths", 1);
+            //    PlayerStats.UpdatePlayerStats("score", -250);
                 GTA.Script.Wait(7000);
                 Setup();
             }
@@ -200,7 +199,7 @@ namespace AirSuperiority.Script.Entities
 
             else if (!ManagedVehicle.Vehicle.IsDriveable)
             {
-                PlayerStats.UpdatePlayerStat("deaths", 1);
+                PlayerStats.UpdatePlayerStats("deaths", 1);
                 Scripts.FadeOutScreen(1500, 2000);
                 ManagedVehicle.Delete();
                 Setup();
@@ -248,9 +247,9 @@ namespace AirSuperiority.Script.Entities
                             boostTimer.Enabled = false;
                             ManagedVehicle.LandingGearState = LandingGearState.Closing;
                         }
-      
+
                         else
-                            ManagedVehicle.ApplyForce(ManagedVehicle.ForwardVector * 0.65f);
+                            ManagedVehicle.ApplyForce(ManagedVehicle.ForwardVector * 0.87f);
                     }
                 }
             }

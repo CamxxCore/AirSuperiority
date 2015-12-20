@@ -71,7 +71,7 @@ namespace AirSuperiority.Script.GameManagement
 
                         fighter.Update();
 
-                        if (fighter.ManagedPed.IsDead)
+                        if (fighter.ManagedPed.IsDead || fighter.ManagedPed.IsInWater)
                         {
                             var GET_PED_KILLER = 0x93C8B64DEB84728C;
                             var mKiller = Function.Call<Entity>((Hash)GET_PED_KILLER, fighter.ManagedPed.Handle);
@@ -85,17 +85,14 @@ namespace AirSuperiority.Script.GameManagement
                                     {
                                         UIManager.DisplayKillInfoUI(fighter, 6000);
                                         UI.Notify("~r~Team Kill Penalty!");
-                                        TeamManager.RegisterScoreForTeam(LocalPlayer.Team, -350);
-                                        //   PlayerStats.UpdatePlayerStat("score", -200);
+                                        TeamManager.RegisterScoreForTeam(LocalPlayer.Team, -250); ;
                                     }
 
                                     else
                                     {
                                         UIManager.DisplayKillInfoUI(fighter, 6000);
-                                        TeamManager.RegisterScoreForTeam(LocalPlayer.Team, 350);
-                                        PlayerStats.UpdatePlayerStat("kills", 1);
-                                        //   PlayerStats.UpdatePlayerStat("score", 200);
-                                        SoundManager.Step();
+                                        TeamManager.RegisterScoreForTeam(LocalPlayer.Team, 250);
+                                        ExpRankManager.AddRankPoints(100, true);
                                     }
                                 }
 
@@ -106,7 +103,7 @@ namespace AirSuperiority.Script.GameManagement
                                         if (eFighter.Team.Index == fighter.Team.Index) continue;
                                         if (eFighter.ManagedPed.Handle == mKiller.Handle || eFighter.ManagedVehicle.Handle == mKiller.Handle)
                                         {
-                                            TeamManager.RegisterScoreForTeam(eFighter.Team, 400);
+                                            TeamManager.RegisterScoreForTeam(eFighter.Team, 350);
                                         }
                                     }
                                 }
@@ -124,8 +121,7 @@ namespace AirSuperiority.Script.GameManagement
                                         {
                                             UIManager.DisplayKillInfoUI(fighter, 6000);
                                             UI.Notify("~r~Team Damage Penalty!");
-                                            TeamManager.RegisterScoreForTeam(killer.Team, -150);
-                                            // PlayerStats.UpdatePlayerStat("score", -100);
+                                            TeamManager.RegisterScoreForTeam(killer.Team, -250);
                                         }
                                     }
 
@@ -134,59 +130,28 @@ namespace AirSuperiority.Script.GameManagement
                                         if (killer == LocalPlayer)
                                         {
                                             UIManager.DisplayKillInfoUI(fighter, 6000);
-                                            TeamManager.RegisterScoreForTeam(killer.Team, 350);
-                                            PlayerStats.UpdatePlayerStat("kills", 1);
-                                            // PlayerStats.UpdatePlayerStat("score", 200);
-                                            SoundManager.Step();
+                                            TeamManager.RegisterScoreForTeam(killer.Team, 250);
+                                            ExpRankManager.AddRankPoints(100, true);
                                         }
 
                                         else
-                                            TeamManager.RegisterScoreForTeam(killer.Team, 350);
+                                            TeamManager.RegisterScoreForTeam(killer.Team, 250);
                                     }
                                 }
                             }
 
                             //stop updating this fighter.
-                            fighter.Team.ActiveFighters.Remove(fighter);
+                            TeamManager.StopUpdate(fighter);
                             fighter.MarkAsNoLongerNeeded();
                         }
 
                         else if (fighter.ManagedPed.IsInWater)
                         {
                             //stop updating this fighter.
-                            fighter.Team.ActiveFighters.Remove(fighter);
+                            TeamManager.StopUpdate(fighter);
                             fighter.MarkAsNoLongerNeeded();
                         }
-
-                        else
-                        {
-
-                            if (LocalPlayer.ManagedVehicle.HasBeenDamagedBy(fighter.ManagedPed.Ped))
-                            {
-                                fighter.ManagedPed.Ped.Task.ClearAll();
-                                Function.Call(Hash.CLEAR_ENTITY_LAST_DAMAGE_ENTITY, LocalPlayer.ManagedVehicle.Vehicle);
-                            }
-
-
-                            else if (fighter.ManagedVehicle.Position.DistanceTo(LocalPlayer.ManagedVehicle.Position) < 180f &&
-
-                                fighter.Team.Index != LocalPlayer.Team.Index &&
-                                Function.Call<bool>(Hash.HAS_ENTITY_CLEAR_LOS_TO_ENTITY, fighter.ManagedPed.Handle, LocalPlayer.ManagedVehicle.Handle, 17))
-                            {
-                                fighter.ClearTasks();
-
-                                var pos = LocalPlayer.ManagedPed.Position;
-                                Function.Call(Hash.TASK_PLANE_MISSION,
-                                    fighter.ManagedPed.Handle,
-                                    fighter.ManagedVehicle.Handle,
-                                    LocalPlayer.ManagedVehicle.Handle,
-                                    LocalPlayer.ManagedPed.Handle,
-                                    pos.X, pos.Y, pos.Z,
-                                    6, 70.0, -1.0, -1, 80, 80);
-                            }
-                        }
                     }
-
                     #endregion
                 }
             }
@@ -202,6 +167,7 @@ namespace AirSuperiority.Script.GameManagement
 
         public static void InitializeScript()
         {
+            Scripts.FadeOutScreen(1500, 800);
             World.GetAllVehicles().ToList().ForEach(x => x.Delete());
             Function.Call(Hash._DISABLE_AUTOMATIC_RESPAWN, true);
             Function.Call(Hash._0x8BF907833BE275DE, 2.0f, 2.0f);
@@ -217,16 +183,22 @@ namespace AirSuperiority.Script.GameManagement
 
             LocalPlayer.Setup();
 
+            Scripts.FadeInScreen(0, 1900);
+
             scriptActive = true;
         }
 
         public static void StopScript()
         {
-            scriptActive = false;
+            UIManager.UnloadActiveData();
             UIManager.Enabled = false;
+
+            TeamManager.UnloadActiveData();
             TeamManager.Enabled = false;
+
             LocalPlayer.Unload();
-            TeamManager.GetActiveFighters().ToList().ForEach(x => { if (x != LocalPlayer) x.Remove(); });
+            scriptActive = false;
+
             Function.Call(Hash.TRIGGER_MUSIC_EVENT, "MP_DM_COUNTDOWN_KILL");
         }
 

@@ -1,4 +1,5 @@
 ﻿using GTA;
+using GTA.Native;
 using AirSuperiority.Types;
 using AirSuperiority.Script.EntityManagement;
 
@@ -9,6 +10,8 @@ namespace AirSuperiority.Script.Entities
         private ManageablePed ped;
         private ManageableVehicle vehicle;
         private ActiveTeamData team;
+
+        public ActiveFighter ActiveTarget { get; private set; }
 
         /// <summary>
         /// Managed ped object associated to this fighter.
@@ -89,6 +92,33 @@ namespace AirSuperiority.Script.Entities
         public void AssignTeam(ActiveTeamData newTeam)
         {
             team = newTeam;
+        }
+
+        /// <summary>
+        /// Set active target for vehicle mission natives.
+        /// </summary>
+        /// <param name="fighter"></param>
+        public void SetActiveTarget(ActiveFighter fighter)
+        {
+            var pos = fighter.ManagedPed.Position;
+            Function.Call(Hash.TASK_PLANE_MISSION,
+                ManagedPed.Handle,
+                ManagedVehicle.Handle,
+                fighter.ManagedVehicle.Handle,
+                fighter.ManagedPed.Handle,
+                pos.X, pos.Y, pos.Z,
+                6, 70.0, -1.0, 30.0, 500, 50);
+
+            ActiveTarget = fighter;
+        }
+
+        /// <summary>
+        /// Set active target for vehicle mission natives.
+        /// </summary>
+        /// <param name="fighter"></param>
+        public void ClearActiveTarget()
+        {
+            ActiveTarget = null;
         }
 
         /// <summary>

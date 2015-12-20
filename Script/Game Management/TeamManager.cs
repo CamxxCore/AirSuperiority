@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using AirSuperiority.Types;
@@ -21,7 +20,7 @@ namespace AirSuperiority.Script.GameManagement
         /// <summary>
         /// Contains information about active teams.
         /// </summary>
-        private static ActiveTeamData[] _activeTeams = new ActiveTeamData[Config.MaxTeams];
+        private static List<ActiveTeamData> _activeTeams = new List<ActiveTeamData>();
 
         /// <summary>
         /// World relationship groups.
@@ -37,11 +36,11 @@ namespace AirSuperiority.Script.GameManagement
         /// <summary>
         /// World position and heading for team spawn locations.
         /// </summary>
-        public static readonly SpawnPoint[] FighterSpawns = new SpawnPoint[] {
-            new SpawnPoint() { Position = Vector3.Lerp(new Vector3(1350.13f, -596.34f, 481.6384f), CenterMap, SpawnDist), Heading = 96.70607f },
+        public static readonly SpawnPoint[] JetSpawns = new SpawnPoint[] {
+            new SpawnPoint() { Position = Vector3.Lerp(new Vector3(1350.13f, -596.34f, 461.6384f), CenterMap, SpawnDist), Heading = 96.70607f },
             new SpawnPoint() { Position = Vector3.Lerp(new Vector3(-1722.227f, -1353.99f, 481.6384f), CenterMap, SpawnDist), Heading = -72f },
-            new SpawnPoint() { Position = Vector3.Lerp(new Vector3(-1563.28f, 60.707f, 481.6384f), CenterMap, SpawnDist), Heading = -120f },
-            new SpawnPoint() { Position = Vector3.Lerp(new Vector3(-372.45f, 523.23f, 481.6384f), CenterMap, SpawnDist), Heading = 190f },
+            new SpawnPoint() { Position = Vector3.Lerp(new Vector3(-1563.28f, 60.707f, 441.6384f), CenterMap, SpawnDist), Heading = -120f },
+            new SpawnPoint() { Position = Vector3.Lerp(new Vector3(-372.45f, 523.23f, 471.6384f), CenterMap, SpawnDist), Heading = 190f },
             new SpawnPoint() { Position = Vector3.Lerp(new Vector3(-161.3713f, -2634.05f, 481.6384f), CenterMap, SpawnDist), Heading = -10f },
             new SpawnPoint() { Position = Vector3.Lerp(new Vector3(505.179f, 128.99f, 481.6384f), CenterMap, SpawnDist), Heading = 120f },
             new SpawnPoint() { Position = Vector3.Lerp(new Vector3(-886.338f, -1694.8f, 481.6384f), CenterMap, SpawnDist), Heading = 0f }
@@ -71,7 +70,7 @@ namespace AirSuperiority.Script.GameManagement
         /// Get all active teams.
         /// </summary>
         /// <returns></returns>
-        public static ActiveTeamData[] GetActiveTeams()
+        public static IEnumerable<ActiveTeamData> GetActiveTeams()
         {
             return _activeTeams;
         }
@@ -102,16 +101,16 @@ namespace AirSuperiority.Script.GameManagement
 
             for (int i = 0; i < Config.MaxTeams; i++)
             {
-                _activeTeams[i] = default(ActiveTeamData);
-                _activeTeams[i].TeamInfo = teamData.Where(x => !_activeTeams.Any(y => y.TeamInfo.FriendlyName == x.FriendlyName)).GetRandomItem();
-                _activeTeams[i].Index = i;
-                _activeTeams[i].RelationshipGroup = rGroups[i];
-                _activeTeams[i].Score = 0;
-                _activeTeams[i].FighterSpawn = FighterSpawns[i].Position;
-                _activeTeams[i].SpawnHeading = FighterSpawns[i].Heading;
-                _activeTeams[i].ActiveFighters = new List<ActiveFighter>();
-                UIManager.UpdateTeamInfoFriendlyName(i, _activeTeams[i].TeamInfo.FriendlyName);
-                UIManager.UpdateTeamInfoFlagAsset(i, _activeTeams[i].TeamInfo.ImageAsset);
+                var tCl = GetColorFromTeamIndex(i);
+
+                var tInfo = teamData.Where(x => !_activeTeams.Any(y => y.TeamInfo.FriendlyName == x.FriendlyName)).GetRandomItem();
+
+                var team = new ActiveTeamData(i, rGroups[i], tCl, tInfo, GroundSpawns[i], JetSpawns[i]);
+
+                UIManager.UpdateTeamInfoFriendlyName(team);
+                UIManager.UpdateTeamInfoFlagAsset(team);
+
+                _activeTeams.Add(team);
             }
         }
 
@@ -186,6 +185,11 @@ namespace AirSuperiority.Script.GameManagement
             }
         }
 
+        public static void StopUpdate(ActiveFighter fighter)
+        {
+            _activeTeams[fighter.Team.Index].ActiveFighters.Remove(fighter);
+        }
+
         /// <summary>
         /// Update team related information.
         /// </summary>
@@ -196,22 +200,24 @@ namespace AirSuperiority.Script.GameManagement
                 var scores = _activeTeams.Select(x => x.Score).ToArray();
 
                 //update team score UI
-                for (int i = 0; i < Config.MaxTeams; i++)
+                for (int i = 0; i < _activeTeams.Count; i++)
                 {
-                    if (_activeTeams[i].Score > 0 && _activeTeams[i].Score == scores.Max())
+                    if (scores[i] >= MaxScore)
                     {
-                        if (_activeTeams[i].Score > MaxScore)
-                        {
-                            UIManager.ShowWinnerInfoUI(_activeTeams[i]);
-                            Enabled = false;
-                            break;
-                        }
+                        UIManager.ShowWinnerInfoUI(_activeTeams[i]);
+                        Enabled = false;
+                        break;
+                    }
 
+                    if (_activeTeams[i].Score > 0 && scores[i] == scores.Max())
+                    {
                         if (!_activeTeams[i].InControl)
                         {
                             _activeTeams[i].InControl = true;
                             string teamCl = GetColorFromTeamIndex(_activeTeams[i].Index).Name;
                             UIManager.NotifyWithWait(string.Format("{0} team took the lead", teamCl), 5000);
+
+                            if (i == 0)
                             SoundManager.Step();
                         }
                     }
@@ -223,11 +229,24 @@ namespace AirSuperiority.Script.GameManagement
         }
 
         /// <summary>
+        /// Unload all active team data
+        /// </summary>
+        public static void UnloadActiveData()
+        {
+            GetActiveFighters().ToList().ForEach(x =>
+            {
+                if (x.GetType() != typeof(LocalFighter)) x.Remove();
+            });
+
+            _activeTeams.Clear();
+        }
+
+        /// <summary>
         /// Reset all team scores.
         /// </summary>
         public static void ResetAllScores()
         {
-            for (int i = 0; i < _activeTeams.Length; i++)
+            for (int i = 0; i < _activeTeams.Count; i++)
                 _activeTeams[i].Score = 0;
         }
 
